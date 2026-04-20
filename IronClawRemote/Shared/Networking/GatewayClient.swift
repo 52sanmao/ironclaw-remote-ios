@@ -63,19 +63,28 @@ struct GatewayClient {
 
     func searchMemory(query: String) async throws -> [MemoryListEntry] {
         let payload = ["query": query]
-        return try await request(path: "/api/memory/search", method: "POST", body: payload)
+        let response: MemorySearchResponse = try await request(path: "/api/memory/search", method: "POST", body: payload)
+        return response.results.map(\.listEntry)
     }
 
     func jobs() async throws -> [JobSummary] {
-        try await request(path: "/api/jobs")
+        let response: JobListResponse = try await request(path: "/api/jobs")
+        return response.jobs
     }
 
     func routines() async throws -> [RoutineSummary] {
-        try await request(path: "/api/routines")
+        let response: RoutineListResponse = try await request(path: "/api/routines")
+        return response.routines
     }
 
     func missions() async throws -> [MissionSummary] {
-        try await request(path: "/api/missions")
+        do {
+            let response: MissionListResponse = try await request(path: "/api/engine/missions")
+            return response.missions
+        } catch GatewayError.httpError(let code, _) where code == 404 {
+            let fallback: MissionListResponse = try await request(path: "/api/missions")
+            return fallback.missions
+        }
     }
 
     private func request<Response: Decodable>(path: String, queryItems: [URLQueryItem] = []) async throws -> Response {
@@ -83,13 +92,13 @@ struct GatewayClient {
     }
 
     private func request<Response: Decodable, Body: Encodable>(path: String, queryItems: [URLQueryItem] = [], method: String, body: Body?) async throws -> Response {
-        guard !configuration.token.isEmpty else {
+        guard !configuration.effectiveToken.isEmpty else {
             throw GatewayError.missingToken
         }
         let url = try makeURL(path: path, queryItems: queryItems)
         var request = URLRequest(url: url)
         request.httpMethod = method
-        request.setValue("Bearer \(configuration.token)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(configuration.effectiveToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         if body != nil {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -112,7 +121,7 @@ struct GatewayClient {
     }
 
     private func makeURL(path: String, queryItems: [URLQueryItem]) throws -> URL {
-        guard var components = URLComponents(url: configuration.baseURL, resolvingAgainstBaseURL: false) else {
+        guard var components = URLComponents(url: configuration.normalizedBaseURL, resolvingAgainstBaseURL: false) else {
             throw GatewayError.invalidURL
         }
 

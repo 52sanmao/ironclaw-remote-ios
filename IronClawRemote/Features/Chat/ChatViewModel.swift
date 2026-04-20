@@ -83,7 +83,7 @@ final class ChatViewModel {
 
         do {
             try await loadHistory(threadID: threadID, using: configuration)
-            if streamTask == nil, !configuration.token.isEmpty {
+            if streamTask == nil, !configuration.effectiveToken.isEmpty {
                 startStreaming(using: configuration)
             }
         } catch {
@@ -245,9 +245,9 @@ final class ChatViewModel {
 
     private func startStreaming(using configuration: GatewayConfiguration) {
         stopStreaming(showNotice: false)
-        guard !configuration.token.isEmpty else { return }
-        let token = configuration.token.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? configuration.token
-        guard let url = URL(string: "/api/chat/events?token=\(token)", relativeTo: configuration.baseURL) else { return }
+        guard !configuration.effectiveToken.isEmpty else { return }
+        let token = configuration.effectiveToken.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? configuration.effectiveToken
+        guard let url = URL(string: "/api/chat/events?token=\(token)", relativeTo: configuration.normalizedBaseURL) else { return }
 
         let sse = SSEClient()
         let connectionID = UUID()

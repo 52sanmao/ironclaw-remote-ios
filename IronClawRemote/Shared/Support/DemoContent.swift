@@ -3,9 +3,9 @@ import Foundation
 enum DemoContent {
     static let demoHost = "demo.ironclaw.local"
     static let gatewayConfiguration = GatewayConfiguration(
-        name: "IronClaw 演示",
-        baseURL: URL(string: "https://\(demoHost)")!,
-        token: ""
+        name: "Rare Lark 网关",
+        baseURL: URL(string: "https://rare-lark.agent4.near.ai")!,
+        token: "b5af51dc17344eab80981e47f5ab5784a0f1df4846e7229fba421ae97021aa1e"
     )
 
     static let profile = GatewayProfile(

@@ -86,28 +86,30 @@ struct GatewayConnectionView: View {
             return nil
         }
 
-        guard let url = URL(string: trimmedBaseURL), let scheme = url.scheme, ["http", "https"].contains(scheme.lowercased()) else {
+        guard let normalized = GatewayConfiguration.normalizeGatewayInput(trimmedBaseURL) else {
             validationMessage = "请输入有效的 http 或 https 网关地址。"
             return nil
         }
 
-        if trimmedToken.isEmpty, GatewayConfiguration.isDemoURL(url) {
+        let resolvedToken = trimmedToken.isEmpty ? (normalized.token ?? "") : trimmedToken
+
+        if resolvedToken.isEmpty, GatewayConfiguration.isDemoURL(normalized.url) {
             return GatewayConfiguration(
                 name: trimmedName.isEmpty ? "IronClaw 演示" : trimmedName,
-                baseURL: url,
+                baseURL: normalized.url,
                 token: ""
             )
         }
 
-        guard !trimmedToken.isEmpty else {
+        guard !resolvedToken.isEmpty else {
             validationMessage = "请输入网关令牌。"
             return nil
         }
 
         return GatewayConfiguration(
             name: trimmedName.isEmpty ? "IronClaw 网关" : trimmedName,
-            baseURL: url,
-            token: trimmedToken
+            baseURL: normalized.url,
+            token: resolvedToken
         )
     }
 }
