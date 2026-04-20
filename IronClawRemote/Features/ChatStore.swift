@@ -43,7 +43,7 @@ final class ChatStore {
         let history = try await client.history(threadID: threadID)
         selectedThreadID = threadID
         pendingGate = history.pendingGate
-        messages = history.turns.flatMap(ChatMessage.messages)
+        messages = history.turns.flatMap { ChatMessage.messages(from: $0) }
     }
 
     @MainActor
@@ -138,9 +138,5 @@ struct ChatMessage: Identifiable, Hashable {
             result.append(.assistant(response))
         }
         return result
-    }
-
-    static func messages(_ turn: TurnInfo) -> [ChatMessage] {
-        messages(from: turn)
     }
 }
