@@ -25,17 +25,22 @@ jobs:
           swift --version
           xcodebuild -version
 
-      - name: Resolve package dependencies
-        run: xcodebuild -resolvePackageDependencies -scheme "IronClaw Remote"
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
 
       - name: Build app for iOS Simulator
         run: |
           set -euo pipefail
           xcodebuild \
-            -scheme "IronClaw Remote" \
+            -project "IronClawRemote.xcodeproj" \
+            -scheme "IronClawRemote" \
             -configuration Debug \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
             build
 
       - name: Package simulator app artifact
