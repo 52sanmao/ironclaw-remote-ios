@@ -1,0 +1,59 @@
+name: iOS Build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Show toolchain versions
+        run: |
+          swift --version
+          xcodebuild -version
+
+      - name: Resolve package dependencies
+        run: xcodebuild -resolvePackageDependencies -scheme "IronClaw Remote"
+
+      - name: Build app for iOS Simulator
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -scheme "IronClaw Remote" \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            build
+
+      - name: Package simulator app artifact
+        run: |
+          set -euo pipefail
+          APP_PATH=$(find "$RUNNER_TEMP/DerivedData/Build/Products" -path "*-iphonesimulator/*.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "No built .app found"
+            find "$RUNNER_TEMP/DerivedData/Build/Products" -maxdepth 3 -print
+            exit 1
+          fi
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$RUNNER_TEMP/IronClawRemote-simulator-app.zip"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: IronClawRemote-simulator-app
+          path: |
+            ${{ runner.temp }}/IronClawRemote-simulator-app.zip
+            ${{ runner.temp }}/DerivedData/Build/Products
+          retention-days: 30
