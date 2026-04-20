@@ -78,13 +78,8 @@ struct GatewayClient {
     }
 
     func missions() async throws -> [MissionSummary] {
-        do {
-            let response: MissionListResponse = try await request(path: "/api/engine/missions")
-            return response.missions
-        } catch GatewayError.httpError(let code, _) where code == 404 {
-            let fallback: MissionListResponse = try await request(path: "/api/missions")
-            return fallback.missions
-        }
+        let response: MissionListResponse = try await request(path: "/api/engine/missions")
+        return response.missions
     }
 
     private func request<Response: Decodable>(path: String, queryItems: [URLQueryItem] = []) async throws -> Response {

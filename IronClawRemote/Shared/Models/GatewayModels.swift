@@ -103,4 +103,13 @@ struct GatewayProfile: Codable, Equatable {
     var displayName: String
     var email: String?
     var role: String?
+    var status: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case displayName = "display_name"
+        case email
+        case role
+        case status
+    }
 }

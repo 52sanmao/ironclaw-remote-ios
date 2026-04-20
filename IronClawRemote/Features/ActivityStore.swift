@@ -16,12 +16,19 @@ final class ActivityStore {
         lastErrorMessage = nil
         defer { isLoading = false }
         do {
-            async let jobs = client.jobs()
-            async let routines = client.routines()
-            async let missions = client.missions()
-            self.jobs = try await jobs
-            self.routines = try await routines
-            self.missions = try await missions
+            async let jobsRequest = client.jobs()
+            async let routinesRequest = client.routines()
+            async let missionsRequest = client.missions()
+
+            jobs = try await jobsRequest
+            routines = try await routinesRequest
+
+            do {
+                missions = try await missionsRequest
+            } catch {
+                missions = []
+                lastErrorMessage = error.localizedDescription
+            }
         } catch {
             lastErrorMessage = error.localizedDescription
         }
