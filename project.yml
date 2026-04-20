@@ -20,6 +20,11 @@ targets:
     deploymentTarget: "17.0"
     sources:
       - path: IronClawRemote
+        excludes:
+          - Features/ActivityHomeView.swift
+          - Features/ChatHomeView.swift
+          - Features/SettingsView.swift
+          - Features/WorkspaceView.swift
     info:
       path: AppInfo.plist
       properties:
