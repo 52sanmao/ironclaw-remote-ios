@@ -71,7 +71,9 @@ struct TurnInfo: Codable, Identifiable {
 }
 
 struct ToolCallInfo: Codable, Identifiable {
-    let id: String
+    var id: String {
+        [name, resultPreview, error, rationale].compactMap { $0 }.joined(separator: "|")
+    }
     let name: String
     let hasResult: Bool
     let hasError: Bool
@@ -86,7 +88,6 @@ struct ToolCallInfo: Codable, Identifiable {
         self.resultPreview = resultPreview
         self.error = error
         self.rationale = rationale
-        self.id = [name, resultPreview, error, rationale].compactMap { $0 }.joined(separator: "|")
     }
 
     enum CodingKeys: String, CodingKey {
