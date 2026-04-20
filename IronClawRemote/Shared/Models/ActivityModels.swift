@@ -1,6 +1,6 @@
 import Foundation
 
-struct JobListResponse: Codable {
+struct JobListResponse: Decodable {
     let jobs: [JobSummary]
 
     private enum CodingKeys: String, CodingKey {
@@ -22,7 +22,7 @@ struct JobListResponse: Codable {
     }
 }
 
-struct RoutineListResponse: Codable {
+struct RoutineListResponse: Decodable {
     let routines: [RoutineSummary]
 
     private enum CodingKeys: String, CodingKey {
@@ -44,7 +44,7 @@ struct RoutineListResponse: Codable {
     }
 }
 
-struct MissionListResponse: Codable {
+struct MissionListResponse: Decodable {
     let missions: [MissionSummary]
 
     private enum CodingKeys: String, CodingKey {
@@ -66,7 +66,7 @@ struct MissionListResponse: Codable {
     }
 }
 
-struct JobSummary: Codable, Identifiable {
+struct JobSummary: Decodable, Identifiable {
     let id: String
     let title: String?
     let source: String?
@@ -104,7 +104,7 @@ struct JobSummary: Codable, Identifiable {
     }
 }
 
-struct RoutineSummary: Codable, Identifiable {
+struct RoutineSummary: Decodable, Identifiable {
     let id: String
     let name: String
     let trigger: String?
@@ -135,7 +135,7 @@ struct RoutineSummary: Codable, Identifiable {
     }
 }
 
-struct MissionSummary: Codable, Identifiable {
+struct MissionSummary: Decodable, Identifiable {
     let id: String
     let name: String
     let goal: String?
