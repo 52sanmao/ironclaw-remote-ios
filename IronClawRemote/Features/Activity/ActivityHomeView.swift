@@ -8,10 +8,10 @@ struct ActivityHomeView: View {
         NavigationStack {
             Group {
                 if viewModel.isLoading && !hasPrimaryContent {
-                    ContentUnavailableView("Loading activity…", systemImage: "bolt.horizontal.circle")
+                    ContentUnavailableView("正在加载活动…", systemImage: "bolt.horizontal.circle")
                 } else if let errorMessage = viewModel.errorMessage, !hasPrimaryContent {
                     ContentUnavailableView(
-                        "Unable to load activity",
+                        "无法加载活动",
                         systemImage: "exclamationmark.triangle",
                         description: Text(errorMessage)
                     )
@@ -21,7 +21,7 @@ struct ActivityHomeView: View {
                             summarySection
                             if let errorMessage = viewModel.errorMessage {
                                 statusNotice(
-                                    title: "Refresh failed",
+                                    title: "刷新失败",
                                     message: errorMessage,
                                     color: ICColor.danger,
                                     icon: "exclamationmark.triangle.fill"
@@ -35,7 +35,7 @@ struct ActivityHomeView: View {
                     }
                 }
             }
-            .navigationTitle("Activity")
+            .navigationTitle("活动")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -63,12 +63,12 @@ struct ActivityHomeView: View {
     private var summarySection: some View {
         HStack(spacing: ICSpacing.md) {
             summaryCard(
-                title: "Jobs",
+                title: "任务",
                 value: "\(viewModel.jobs.count)",
                 icon: "shippingbox",
-                destination: ActivityCollectionView(title: "Jobs") {
+                destination: ActivityCollectionView(title: "任务") {
                     if viewModel.jobs.isEmpty {
-                        emptyCard("No jobs available right now.")
+                        emptyCard("当前没有可用任务。")
                     } else {
                         ForEach(viewModel.jobs) { job in
                             jobCard(job)
@@ -78,12 +78,12 @@ struct ActivityHomeView: View {
             )
 
             summaryCard(
-                title: "Routines",
+                title: "例程",
                 value: "\(viewModel.routines.count)",
                 icon: "clock.arrow.circlepath",
-                destination: ActivityCollectionView(title: "Routines") {
+                destination: ActivityCollectionView(title: "例程") {
                     if viewModel.routines.isEmpty {
-                        emptyCard("No routines available right now.")
+                        emptyCard("当前没有可用例程。")
                     } else {
                         ForEach(viewModel.routines) { routine in
                             routineCard(routine)
@@ -93,20 +93,20 @@ struct ActivityHomeView: View {
             )
 
             summaryCard(
-                title: "Missions",
+                title: "使命",
                 value: "\(viewModel.missions.count)",
                 icon: "flag.pattern.checkered",
-                destination: ActivityCollectionView(title: "Missions") {
+                destination: ActivityCollectionView(title: "使命") {
                     if let missionsErrorMessage = viewModel.missionsErrorMessage {
                         statusNotice(
-                            title: "Missions unavailable",
+                            title: "使命不可用",
                             message: missionsErrorMessage,
                             color: ICColor.warning,
                             icon: "flag.slash.fill"
                         )
                     }
                     if viewModel.missions.isEmpty {
-                        emptyCard("No missions available from the current gateway.")
+                        emptyCard("当前网关没有可用使命。")
                     } else {
                         ForEach(viewModel.missions) { mission in
                             missionCard(mission)
@@ -119,10 +119,10 @@ struct ActivityHomeView: View {
 
     private var jobsSection: some View {
         section(
-            "Jobs",
-            destination: ActivityCollectionView(title: "Jobs") {
+            "任务",
+            destination: ActivityCollectionView(title: "任务") {
                 if viewModel.jobs.isEmpty {
-                    emptyCard("No jobs available right now.")
+                    emptyCard("当前没有可用任务。")
                 } else {
                     ForEach(viewModel.jobs) { job in
                         jobCard(job)
@@ -131,7 +131,7 @@ struct ActivityHomeView: View {
             }
         ) {
             if viewModel.jobs.isEmpty {
-                emptyCard("No jobs available right now.")
+                emptyCard("当前没有可用任务。")
             } else {
                 ForEach(viewModel.jobs.prefix(5)) { job in
                     jobCard(job)
@@ -142,10 +142,10 @@ struct ActivityHomeView: View {
 
     private var routinesSection: some View {
         section(
-            "Routines",
-            destination: ActivityCollectionView(title: "Routines") {
+            "例程",
+            destination: ActivityCollectionView(title: "例程") {
                 if viewModel.routines.isEmpty {
-                    emptyCard("No routines available right now.")
+                    emptyCard("当前没有可用例程。")
                 } else {
                     ForEach(viewModel.routines) { routine in
                         routineCard(routine)
@@ -154,7 +154,7 @@ struct ActivityHomeView: View {
             }
         ) {
             if viewModel.routines.isEmpty {
-                emptyCard("No routines available right now.")
+                emptyCard("当前没有可用例程。")
             } else {
                 ForEach(viewModel.routines.prefix(5)) { routine in
                     routineCard(routine)
@@ -165,18 +165,18 @@ struct ActivityHomeView: View {
 
     private var missionsSection: some View {
         section(
-            "Missions",
-            destination: ActivityCollectionView(title: "Missions") {
+            "使命",
+            destination: ActivityCollectionView(title: "使命") {
                 if let missionsErrorMessage = viewModel.missionsErrorMessage {
                     statusNotice(
-                        title: "Missions unavailable",
+                        title: "使命不可用",
                         message: missionsErrorMessage,
                         color: ICColor.warning,
                         icon: "flag.slash.fill"
                     )
                 }
                 if viewModel.missions.isEmpty {
-                    emptyCard("No missions available from the current gateway.")
+                    emptyCard("当前网关没有可用使命。")
                 } else {
                     ForEach(viewModel.missions) { mission in
                         missionCard(mission)
@@ -186,14 +186,14 @@ struct ActivityHomeView: View {
         ) {
             if let missionsErrorMessage = viewModel.missionsErrorMessage {
                 statusNotice(
-                    title: "Missions unavailable",
+                    title: "使命不可用",
                     message: missionsErrorMessage,
                     color: ICColor.warning,
                     icon: "flag.slash.fill"
                 )
             }
             if viewModel.missions.isEmpty {
-                emptyCard("No missions available from the current gateway.")
+                emptyCard("当前网关没有可用使命。")
             } else {
                 ForEach(viewModel.missions.prefix(5)) { mission in
                     missionCard(mission)
@@ -211,7 +211,7 @@ struct ActivityHomeView: View {
                 Text(value)
                     .font(.title2.bold())
                     .foregroundStyle(ICColor.textPrimary)
-                Text("Open")
+                Text("打开")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(ICColor.accent)
             }
@@ -227,7 +227,7 @@ struct ActivityHomeView: View {
                 Text(title)
                     .font(.title3.bold())
                 Spacer()
-                NavigationLink("View All", destination: destination)
+                NavigationLink("查看全部", destination: destination)
                     .font(.caption.weight(.semibold))
             }
             content()
@@ -249,7 +249,7 @@ struct ActivityHomeView: View {
                         }
                     }
                     Spacer()
-                    statusBadge(job.status, color: statusColor(for: job.status))
+                    statusBadge(Self.localizedStatusTitle(job.status), color: statusColor(for: job.status))
                 }
 
                 if let createdAt = job.createdAt, !createdAt.isEmpty {
@@ -274,7 +274,7 @@ struct ActivityHomeView: View {
                         .foregroundStyle(ICColor.textPrimary)
                     Spacer()
                     if let status = routine.status, !status.isEmpty {
-                        statusBadge(status, color: statusColor(for: status))
+                        statusBadge(Self.localizedStatusTitle(status), color: statusColor(for: status))
                     }
                 }
 
@@ -300,11 +300,11 @@ struct ActivityHomeView: View {
                         .foregroundStyle(ICColor.textPrimary)
                     Spacer()
                     if let status = mission.status, !status.isEmpty {
-                        statusBadge(status, color: statusColor(for: status))
+                        statusBadge(Self.localizedStatusTitle(status), color: statusColor(for: status))
                     }
                 }
 
-                Text(mission.goal ?? "No mission goal provided.")
+                Text(mission.goal ?? "未提供使命目标。")
                     .font(.caption)
                     .foregroundStyle(ICColor.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -342,13 +342,28 @@ struct ActivityHomeView: View {
     }
 
     private func statusBadge(_ text: String, color: Color) -> some View {
-        Text(text.capitalized)
+        Text(text)
             .font(.caption2.weight(.semibold))
             .foregroundStyle(color)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(color.opacity(0.12))
             .clipShape(Capsule())
+    }
+
+    private static func localizedStatusTitle(_ status: String) -> String {
+        switch status.lowercased() {
+        case "running", "active", "streaming":
+            return "运行中"
+        case "succeeded", "success", "completed", "ready":
+            return "已完成"
+        case "waiting", "queued", "paused", "pending":
+            return "等待中"
+        case "failed", "error", "cancelled", "canceled":
+            return "失败"
+        default:
+            return status
+        }
     }
 
     private func statusColor(for status: String?) -> Color {
@@ -384,23 +399,27 @@ struct ActivityHomeView: View {
 
         var body: some View {
             List {
-                Section("Overview") {
-                    LabeledContent("Title", value: job.title ?? job.id)
-                    LabeledContent("Status", value: job.status.capitalized)
+                Section("概览") {
+                    LabeledContent("标题", value: job.title ?? job.id)
+                    LabeledContent("状态", value: localizedStatusTitle(job.status))
                     if let source = job.source, !source.isEmpty {
-                        LabeledContent("Source", value: source)
+                        LabeledContent("来源", value: source)
                     }
                     if let createdAt = job.createdAt, !createdAt.isEmpty {
-                        LabeledContent("Created", value: createdAt)
+                        LabeledContent("创建时间", value: createdAt)
                     }
                 }
 
-                Section("Identifier") {
+                Section("标识") {
                     Text(job.id)
                         .font(.system(.body, design: .monospaced))
                 }
             }
-            .navigationTitle(job.title ?? "Job")
+            .navigationTitle(job.title ?? "任务")
+        }
+
+        private func localizedStatusTitle(_ status: String) -> String {
+            ActivityHomeView.localizedStatusTitle(status)
         }
     }
 
@@ -409,22 +428,26 @@ struct ActivityHomeView: View {
 
         var body: some View {
             List {
-                Section("Overview") {
-                    LabeledContent("Name", value: routine.name)
+                Section("概览") {
+                    LabeledContent("名称", value: routine.name)
                     if let status = routine.status, !status.isEmpty {
-                        LabeledContent("Status", value: status.capitalized)
+                        LabeledContent("状态", value: localizedStatusTitle(status))
                     }
                     if let trigger = routine.trigger, !trigger.isEmpty {
-                        LabeledContent("Trigger", value: trigger)
+                        LabeledContent("触发条件", value: trigger)
                     }
                 }
 
-                Section("Identifier") {
+                Section("标识") {
                     Text(routine.id)
                         .font(.system(.body, design: .monospaced))
                 }
             }
             .navigationTitle(routine.name)
+        }
+
+        private func localizedStatusTitle(_ status: String) -> String {
+            ActivityHomeView.localizedStatusTitle(status)
         }
     }
 
@@ -433,25 +456,29 @@ struct ActivityHomeView: View {
 
         var body: some View {
             List {
-                Section("Overview") {
-                    LabeledContent("Name", value: mission.name)
+                Section("概览") {
+                    LabeledContent("名称", value: mission.name)
                     if let status = mission.status, !status.isEmpty {
-                        LabeledContent("Status", value: status.capitalized)
+                        LabeledContent("状态", value: localizedStatusTitle(status))
                     }
                     if let goal = mission.goal, !goal.isEmpty {
                         Text(goal)
                     } else {
-                        Text("No mission goal provided.")
+                        Text("未提供使命目标。")
                             .foregroundStyle(ICColor.textSecondary)
                     }
                 }
 
-                Section("Identifier") {
+                Section("标识") {
                     Text(mission.id)
                         .font(.system(.body, design: .monospaced))
                 }
             }
             .navigationTitle(mission.name)
+        }
+
+        private func localizedStatusTitle(_ status: String) -> String {
+            ActivityHomeView.localizedStatusTitle(status)
         }
     }
 }

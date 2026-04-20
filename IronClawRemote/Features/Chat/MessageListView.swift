@@ -142,11 +142,11 @@ private enum MessageListEmptyState {
     var title: String {
         switch self {
         case .loading:
-            return "Loading conversation…"
+            return "正在加载会话…"
         case .unselected:
-            return "No thread selected"
+            return "未选择会话"
         case .ready:
-            return "No messages yet"
+            return "还没有消息"
         }
     }
 
@@ -164,11 +164,11 @@ private enum MessageListEmptyState {
     var description: String {
         switch self {
         case .loading:
-            return "Syncing the latest messages from your IronClaw gateway."
+            return "正在同步 IronClaw 网关中的最新消息。"
         case .unselected:
-            return "Pick a thread from the sidebar or create a new one to start chatting."
+            return "请从侧边栏选择一个会话，或新建会话开始聊天。"
         case .ready:
-            return "Start a conversation from the composer below."
+            return "从下方输入框开始一段新对话。"
         }
     }
 }
@@ -235,7 +235,7 @@ private struct PendingUserCard: View {
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 6) {
-            Text("Sending…")
+            Text("发送中…")
                 .font(.caption)
                 .foregroundStyle(ICColor.textSecondary)
             UserBubble(text: text)
@@ -263,13 +263,13 @@ private struct LiveAssistantCard: View {
     private var statusText: String {
         switch state {
         case .sending:
-            return "Waiting for IronClaw…"
+            return "等待 IronClaw 响应…"
         case .streaming:
-            return "Streaming response"
+            return "正在生成回复"
         case .waitingForGate:
-            return "Awaiting approval"
+            return "等待审批"
         case .failed:
-            return "Stream failed"
+            return "流式响应失败"
         case .idle:
             return ""
         }
@@ -306,10 +306,10 @@ private struct LiveActivityPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: ICSpacing.xs) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Live Activity")
+                Text("实时活动")
                     .font(.headline)
                 Spacer(minLength: 0)
-                Text("\(visibleEvents.count) updates")
+                Text("\(visibleEvents.count) 条更新")
                     .font(.caption)
                     .foregroundStyle(ICColor.textSecondary)
             }
@@ -390,7 +390,7 @@ private struct GeneratedImageSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: ICSpacing.sm) {
-            Label("Generated Images", systemImage: "photo.on.rectangle.angled")
+            Label("生成图片", systemImage: "photo.on.rectangle.angled")
                 .font(.subheadline.bold())
                 .foregroundStyle(ICColor.textPrimary)
 
@@ -503,7 +503,7 @@ private struct GeneratedImageTile: View {
             Image(systemName: "photo")
                 .font(.title3)
                 .foregroundStyle(ICColor.textSecondary)
-            Text("Preview unavailable")
+            Text("无法预览")
                 .font(.caption)
                 .foregroundStyle(ICColor.textSecondary)
         }
@@ -520,7 +520,7 @@ private struct PendingGateCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: ICSpacing.sm) {
-            Label("Approval Required", systemImage: "lock.shield")
+            Label("需要审批", systemImage: "lock.shield")
                 .font(.headline)
             Text(gate.description)
             if !gate.parameters.isEmpty {
@@ -529,11 +529,11 @@ private struct PendingGateCard: View {
                     .foregroundStyle(ICColor.textSecondary)
             }
             HStack {
-                Button("Approve") { resolveGate(.approved(always: false)) }
+                Button("批准") { resolveGate(.approved(always: false)) }
                     .buttonStyle(.borderedProminent)
-                Button("Deny", role: .destructive) { resolveGate(.denied) }
+                Button("拒绝", role: .destructive) { resolveGate(.denied) }
                     .buttonStyle(.bordered)
-                Button("Cancel") { resolveGate(.cancelled) }
+                Button("取消") { resolveGate(.cancelled) }
                     .buttonStyle(.bordered)
             }
         }

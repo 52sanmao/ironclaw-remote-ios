@@ -15,7 +15,7 @@ struct ChatHeaderView: View {
                     Circle()
                         .fill(statusColor)
                         .frame(width: 8, height: 8)
-                    Text(status.rawValue.capitalized)
+                    Text(connectionStatusTitle)
                         .font(.caption)
                         .foregroundStyle(ICColor.textSecondary)
                     if let badgeText {
@@ -38,6 +38,19 @@ struct ChatHeaderView: View {
         .background(.ultraThinMaterial)
     }
 
+    private var connectionStatusTitle: String {
+        switch status {
+        case .disconnected:
+            return "未连接"
+        case .connecting:
+            return "连接中"
+        case .connected:
+            return "已连接"
+        case .degraded:
+            return "异常"
+        }
+    }
+
     private var statusColor: Color {
         switch status {
         case .connected: ICColor.success
@@ -52,13 +65,13 @@ struct ChatHeaderView: View {
         case .idle:
             return nil
         case .sending:
-            return "Sending"
+            return "发送中"
         case .streaming:
-            return "Streaming"
+            return "生成中"
         case .waitingForGate:
-            return "Approval"
+            return "待审批"
         case .failed:
-            return "Error"
+            return "错误"
         }
     }
 

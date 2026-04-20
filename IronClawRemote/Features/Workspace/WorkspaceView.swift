@@ -19,10 +19,10 @@ struct WorkspaceView: View {
     var body: some View {
         NavigationSplitView {
             sidebarContent
-                .navigationTitle("Workspace")
+                .navigationTitle("工作区")
         } detail: {
             detailContent
-                .navigationTitle("Preview")
+                .navigationTitle("预览")
                 .task {
                     await viewModel.load(using: appState.gatewayConfiguration)
                 }
@@ -35,23 +35,23 @@ struct WorkspaceView: View {
     private var sidebarContent: some View {
         Group {
             if viewModel.isLoading && viewModel.entries.isEmpty {
-                ContentUnavailableView("Loading workspace…", systemImage: "folder")
+                ContentUnavailableView("正在加载工作区…", systemImage: "folder")
             } else if let loadErrorMessage = viewModel.loadErrorMessage, viewModel.entries.isEmpty {
                 ContentUnavailableView(
-                    "Couldn’t load workspace",
+                    "无法加载工作区",
                     systemImage: "exclamationmark.triangle",
                     description: Text(loadErrorMessage)
                 )
             } else if viewModel.entries.isEmpty {
                 ContentUnavailableView(
-                    "No memory files",
+                    "暂无记忆文件",
                     systemImage: "folder",
-                    description: Text("The gateway returned an empty workspace tree.")
+                    description: Text("网关返回的工作区树为空。")
                 )
             } else {
                 List {
                     if !directoryEntries.isEmpty {
-                        Section("Directories") {
+                        Section("目录") {
                             ForEach(directoryEntries) { entry in
                                 entryButton(for: entry)
                             }
@@ -59,7 +59,7 @@ struct WorkspaceView: View {
                     }
 
                     if !fileEntries.isEmpty {
-                        Section("Files") {
+                        Section("文件") {
                             ForEach(fileEntries) { entry in
                                 entryButton(for: entry)
                             }
@@ -75,7 +75,7 @@ struct WorkspaceView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: ICSpacing.md) {
                 HStack(spacing: ICSpacing.sm) {
-                    TextField("Search workspace", text: Binding(
+                    TextField("搜索工作区", text: Binding(
                         get: { viewModel.searchQuery },
                         set: { viewModel.searchQuery = $0 }
                     ))
@@ -87,7 +87,7 @@ struct WorkspaceView: View {
                         }
                     }
 
-                    Button(viewModel.isSearching ? "Searching…" : "Search") {
+                    Button(viewModel.isSearching ? "搜索中…" : "搜索") {
                         Task { await viewModel.search(using: appState.gatewayConfiguration) }
                     }
                     .buttonStyle(.bordered)
@@ -106,14 +106,14 @@ struct WorkspaceView: View {
     private var searchSection: some View {
         if viewModel.isSearching {
             WorkspaceStatusCard(
-                title: "Searching workspace…",
-                message: "Looking for matching memory files and folders.",
+                title: "正在搜索工作区…",
+                message: "正在查找匹配的记忆文件和文件夹。",
                 systemImage: "magnifyingglass",
                 tint: ICColor.textSecondary
             )
         } else if let searchErrorMessage = viewModel.searchErrorMessage {
             WorkspaceStatusCard(
-                title: "Search failed",
+                title: "搜索失败",
                 message: searchErrorMessage,
                 systemImage: "exclamationmark.triangle.fill",
                 tint: ICColor.danger
@@ -121,7 +121,7 @@ struct WorkspaceView: View {
         } else if !viewModel.searchResults.isEmpty {
             VStack(alignment: .leading, spacing: ICSpacing.sm) {
                 HStack {
-                    Text("Search Results")
+                    Text("搜索结果")
                         .font(.headline)
                     Spacer()
                     Text("\(viewModel.searchResults.count)")
@@ -143,9 +143,9 @@ struct WorkspaceView: View {
             }
         } else if viewModel.hasSearched {
             ContentUnavailableView(
-                "No search results",
+                "没有搜索结果",
                 systemImage: "magnifyingglass",
-                description: Text("Try another name or a shorter keyword.")
+                description: Text("请尝试其他名称或更短的关键词。")
             )
         }
     }
@@ -153,19 +153,19 @@ struct WorkspaceView: View {
     @ViewBuilder
     private var previewSection: some View {
         if viewModel.isOpeningFile {
-            ContentUnavailableView("Loading preview…", systemImage: "doc.text")
+            ContentUnavailableView("正在加载预览…", systemImage: "doc.text")
         } else if let previewErrorMessage = viewModel.previewErrorMessage {
             WorkspaceStatusCard(
-                title: "Couldn’t open file",
+                title: "无法打开文件",
                 message: previewErrorMessage,
                 systemImage: "exclamationmark.triangle.fill",
                 tint: ICColor.danger
             )
         } else if viewModel.selectedEntryIsDirectory, let selectedEntryPath = viewModel.selectedEntryPath {
             ContentUnavailableView(
-                "Directory selected",
+                "已选中目录",
                 systemImage: "folder.badge.questionmark",
-                description: Text("\(selectedEntryPath) is a directory. Select a file to preview its contents.")
+                description: Text("\(selectedEntryPath) 是一个目录。请选择文件以预览其内容。")
             )
         } else if let selectedFile = viewModel.selectedFile {
             VStack(alignment: .leading, spacing: ICSpacing.sm) {
@@ -188,12 +188,12 @@ struct WorkspaceView: View {
             .clipShape(RoundedRectangle(cornerRadius: ICCornerRadius.card, style: .continuous))
         } else if let infoMessage = viewModel.infoMessage {
             ContentUnavailableView(
-                "Select a file",
+                "选择文件",
                 systemImage: "doc.text.magnifyingglass",
                 description: Text(infoMessage)
             )
         } else {
-            ContentUnavailableView("Select a memory file", systemImage: "doc.text.magnifyingglass")
+            ContentUnavailableView("选择记忆文件", systemImage: "doc.text.magnifyingglass")
         }
     }
 

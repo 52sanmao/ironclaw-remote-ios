@@ -12,46 +12,46 @@ struct GatewayConnectionView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Gateway") {
-                    TextField("Display name", text: $name)
-                    TextField("Base URL", text: $baseURL)
+                Section("网关") {
+                    TextField("显示名称", text: $name)
+                    TextField("基础地址", text: $baseURL)
                         .textInputAutocapitalization(.never)
                         .keyboardType(.URL)
-                    SecureField("Token", text: $token)
+                    SecureField("令牌", text: $token)
                 }
 
                 Section {
-                    Button("Save Connection") {
+                    Button("保存连接") {
                         save()
                     }
                     .buttonStyle(.borderedProminent)
 
-                    Button(isTesting ? "Testing…" : "Test Connection") {
+                    Button(isTesting ? "测试中…" : "测试连接") {
                         Task { await testConnection() }
                     }
                     .disabled(isTesting)
                 }
 
                 if let validationMessage {
-                    Section("Status") {
+                    Section("状态") {
                         Text(validationMessage)
                             .foregroundStyle(ICColor.danger)
                     }
                 } else if let error = appState.session.lastErrorMessage {
-                    Section("Status") {
+                    Section("状态") {
                         Text(error)
                             .foregroundStyle(ICColor.danger)
                     }
                 } else if let profile = appState.session.profile {
-                    Section("Connected") {
-                        LabeledContent("Name", value: profile.displayName)
+                    Section("已连接") {
+                        LabeledContent("名称", value: profile.displayName)
                         if let email = profile.email {
-                            LabeledContent("Email", value: email)
+                            LabeledContent("邮箱", value: email)
                         }
                     }
                 }
             }
-            .navigationTitle("Connect")
+            .navigationTitle("连接")
             .onAppear {
                 name = appState.gatewayConfiguration.name
                 baseURL = appState.gatewayConfiguration.baseURL.absoluteString
@@ -82,30 +82,30 @@ struct GatewayConnectionView: View {
         let trimmedToken = token.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !trimmedBaseURL.isEmpty else {
-            validationMessage = "Enter a gateway URL."
+            validationMessage = "请输入网关地址。"
             return nil
         }
 
         guard let url = URL(string: trimmedBaseURL), let scheme = url.scheme, ["http", "https"].contains(scheme.lowercased()) else {
-            validationMessage = "Enter a valid http or https gateway URL."
+            validationMessage = "请输入有效的 http 或 https 网关地址。"
             return nil
         }
 
         if trimmedToken.isEmpty, GatewayConfiguration.isDemoURL(url) {
             return GatewayConfiguration(
-                name: trimmedName.isEmpty ? "IronClaw Demo" : trimmedName,
+                name: trimmedName.isEmpty ? "IronClaw 演示" : trimmedName,
                 baseURL: url,
                 token: ""
             )
         }
 
         guard !trimmedToken.isEmpty else {
-            validationMessage = "Enter a gateway token."
+            validationMessage = "请输入网关令牌。"
             return nil
         }
 
         return GatewayConfiguration(
-            name: trimmedName.isEmpty ? "IronClaw Gateway" : trimmedName,
+            name: trimmedName.isEmpty ? "IronClaw 网关" : trimmedName,
             baseURL: url,
             token: trimmedToken
         )

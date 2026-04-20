@@ -18,7 +18,7 @@ struct DiscoverView: View {
                 }
                 .padding(ICSpacing.md)
             }
-            .navigationTitle("Discover")
+            .navigationTitle("发现")
         }
     }
 
@@ -56,18 +56,18 @@ struct DiscoverView: View {
                 }
             } else {
                 Divider()
-                Text(appState.session.lastErrorMessage ?? "Connect to a gateway to unlock chat, workspace, and activity tools.")
+                Text(appState.session.lastErrorMessage ?? "连接网关后即可使用聊天、工作区和活动工具。")
                     .font(.caption)
                     .foregroundStyle(ICColor.textSecondary)
             }
 
             HStack(spacing: ICSpacing.sm) {
-                Button("Test Connection") {
+                Button("测试连接") {
                     Task { await appState.refreshProfile() }
                 }
                 .buttonStyle(.borderedProminent)
 
-                Button("Open Settings") {
+                Button("打开设置") {
                     appState.selectedTab = .settings
                 }
                 .buttonStyle(.bordered)
@@ -78,31 +78,31 @@ struct DiscoverView: View {
 
     private var quickActionsSection: some View {
         VStack(alignment: .leading, spacing: ICSpacing.sm) {
-            Text("Quick Actions")
+            Text("快捷操作")
                 .font(.title3.bold())
 
             LazyVGrid(columns: columns, spacing: ICSpacing.md) {
                 quickActionCard(
-                    title: "Chat",
-                    subtitle: "Resume threads and live responses.",
+                    title: "聊天",
+                    subtitle: "继续会话并查看实时回复。",
                     systemImage: "message.badge.waveform",
                     action: { appState.selectedTab = .chat }
                 )
                 quickActionCard(
-                    title: "Workspace",
-                    subtitle: "Search and preview memory files.",
+                    title: "工作区",
+                    subtitle: "搜索并预览记忆文件。",
                     systemImage: "folder",
                     action: { appState.selectedTab = .workspace }
                 )
                 quickActionCard(
-                    title: "Activity",
-                    subtitle: "Inspect jobs, routines, and missions.",
+                    title: "活动",
+                    subtitle: "查看任务、例程和使命。",
                     systemImage: "waveform.path.ecg",
                     action: { appState.selectedTab = .activity }
                 )
                 quickActionCard(
-                    title: "Settings",
-                    subtitle: "Update gateway URL, token, and theme.",
+                    title: "设置",
+                    subtitle: "更新网关地址、令牌和主题。",
                     systemImage: "gearshape",
                     action: { appState.selectedTab = .settings }
                 )
@@ -112,22 +112,22 @@ struct DiscoverView: View {
 
     private var capabilitiesSection: some View {
         VStack(alignment: .leading, spacing: ICSpacing.sm) {
-            Text("Gateway Capabilities")
+            Text("网关能力")
                 .font(.title3.bold())
 
             capabilityRow(
-                title: "Native chat control",
-                detail: "Stream assistant replies, inspect live events, and resolve gates without leaving iOS.",
+                title: "原生聊天控制",
+                detail: "在 iOS 上直接流式查看助手回复、检查实时事件并处理审批。",
                 systemImage: "bubble.left.and.bubble.right.fill"
             )
             capabilityRow(
-                title: "Workspace memory browsing",
-                detail: "Read memory files and jump from search results straight into previews.",
+                title: "工作区记忆浏览",
+                detail: "读取记忆文件，并从搜索结果直接跳转到预览。",
                 systemImage: "doc.text.magnifyingglass"
             )
             capabilityRow(
-                title: "Operational activity",
-                detail: "Track jobs, routines, and missions with summary cards and drill-down detail views.",
+                title: "运行活动总览",
+                detail: "用摘要卡片和详情视图跟踪任务、例程和使命。",
                 systemImage: "chart.bar.xaxis"
             )
         }
@@ -188,13 +188,13 @@ struct DiscoverView: View {
     private func statusTitle(_ status: ConnectionStatus) -> String {
         switch status {
         case .disconnected:
-            return "Disconnected"
+            return "未连接"
         case .connecting:
-            return "Connecting"
+            return "连接中"
         case .connected:
-            return "Connected"
+            return "已连接"
         case .degraded:
-            return "Degraded"
+            return "异常"
         }
     }
 

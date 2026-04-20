@@ -18,7 +18,7 @@ struct ChatHomeView: View {
                     Task { await viewModel.createThread(using: appState.gatewayConfiguration) }
                 }
             )
-            .navigationTitle("Threads")
+            .navigationTitle("会话")
         } detail: {
             VStack(spacing: 0) {
                 ChatHeaderView(
@@ -72,11 +72,11 @@ struct ChatHomeView: View {
             .sheet(isPresented: $showingConnectionSheet) {
                 GatewayConnectionView()
             }
-            .alert("Connection Error", isPresented: Binding(
+            .alert("连接错误", isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }
             )) {
-                Button("OK", role: .cancel) { viewModel.errorMessage = nil }
+                Button("确定", role: .cancel) { viewModel.errorMessage = nil }
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }

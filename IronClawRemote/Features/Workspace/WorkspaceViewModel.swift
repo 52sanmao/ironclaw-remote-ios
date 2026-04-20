@@ -46,7 +46,7 @@ final class WorkspaceViewModel {
                 selectedEntryIsDirectory = false
                 selectedFile = nil
                 previewErrorMessage = nil
-                infoMessage = "No memory files are available yet."
+                infoMessage = "暂时没有可用的记忆文件。"
             }
             return
         }
@@ -74,7 +74,7 @@ final class WorkspaceViewModel {
                 selectedEntryIsDirectory = false
                 selectedFile = nil
                 previewErrorMessage = nil
-                infoMessage = "No memory files are available yet."
+                infoMessage = "暂时没有可用的记忆文件。"
             }
         } catch {
             entries = []
@@ -152,7 +152,7 @@ final class WorkspaceViewModel {
             if let file = DemoContent.memoryFiles[path] {
                 selectedFile = file
             } else {
-                previewErrorMessage = "Demo file not found."
+                previewErrorMessage = "未找到演示文件。"
             }
             return
         }
@@ -166,7 +166,7 @@ final class WorkspaceViewModel {
     }
 
     private func directoryMessage(for path: String) -> String {
-        "\(path) is a directory. Select a file to preview its contents."
+        "\(path) 是一个目录。请选择文件以预览其内容。"
     }
 
     private func sortTreeEntries(_ entries: [MemoryTreeEntry]) -> [MemoryTreeEntry] {

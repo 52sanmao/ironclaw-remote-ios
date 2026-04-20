@@ -59,7 +59,7 @@ final class ChatViewModel {
             startStreaming(using: configuration)
         } catch {
             errorMessage = error.localizedDescription
-            composerNotice = ComposerNotice(message: "Couldn’t load chat threads from the gateway.", tone: .error)
+            composerNotice = ComposerNotice(message: "无法从网关加载聊天会话。", tone: .error)
             streamState = .failed
         }
     }
@@ -88,7 +88,7 @@ final class ChatViewModel {
             }
         } catch {
             errorMessage = error.localizedDescription
-            composerNotice = ComposerNotice(message: "Couldn’t refresh the latest thread history.", tone: .error)
+            composerNotice = ComposerNotice(message: "无法刷新最新会话记录。", tone: .error)
         }
     }
 
@@ -101,9 +101,9 @@ final class ChatViewModel {
                 id: UUID(),
                 state: "ready",
                 turnCount: 0,
-                createdAt: "Just now",
-                updatedAt: "Just now",
-                title: "New Demo Thread",
+                createdAt: "刚刚",
+                updatedAt: "刚刚",
+                title: "新的演示会话",
                 threadType: "conversation",
                 channel: "preview"
             )
@@ -113,7 +113,7 @@ final class ChatViewModel {
             pendingGate = nil
             resetComposerState()
             resetLiveState()
-            composerNotice = ComposerNotice(message: "Created a new demo thread.", tone: .info)
+            composerNotice = ComposerNotice(message: "已创建新的演示会话。", tone: .info)
             return
         }
 
@@ -128,7 +128,7 @@ final class ChatViewModel {
             resetLiveState()
         } catch {
             errorMessage = error.localizedDescription
-            composerNotice = ComposerNotice(message: "Couldn’t create a new thread on the gateway.", tone: .error)
+            composerNotice = ComposerNotice(message: "无法在网关上创建新会话。", tone: .error)
         }
     }
 
@@ -167,7 +167,7 @@ final class ChatViewModel {
             composerAttachments = draftAttachments
             errorMessage = error.localizedDescription
             streamState = .failed
-            composerNotice = ComposerNotice(message: "Couldn’t send the current draft. Fix the issue and try again.", tone: .error)
+            composerNotice = ComposerNotice(message: "无法发送当前草稿，请修复问题后重试。", tone: .error)
         }
     }
 
@@ -180,13 +180,13 @@ final class ChatViewModel {
             switch resolution {
             case .approved:
                 streamState = .idle
-                composerNotice = ComposerNotice(message: "Demo approval granted. The simulated run is complete.", tone: .info)
+                composerNotice = ComposerNotice(message: "演示审批已通过，模拟运行已完成。", tone: .info)
             case .denied, .cancelled:
                 streamState = .idle
-                composerNotice = ComposerNotice(message: "Demo approval flow closed.", tone: .warning)
+                composerNotice = ComposerNotice(message: "演示审批流程已结束。", tone: .warning)
             case .credentialProvided:
                 streamState = .idle
-                composerNotice = ComposerNotice(message: "Demo credential accepted.", tone: .info)
+                composerNotice = ComposerNotice(message: "已接受演示凭证。", tone: .info)
             }
             eventFeed.insert(ChatEvent(type: "gate_resolved", threadID: pendingGate.threadID, requestID: pendingGate.requestID, message: nil, content: nil, name: nil, toolName: pendingGate.toolName, gateName: pendingGate.gateName, description: nil, parameters: nil, preview: nil, detail: nil, resolution: "approved", success: true, resumeKind: .null), at: 0)
             return
@@ -202,7 +202,7 @@ final class ChatViewModel {
         } catch {
             errorMessage = error.localizedDescription
             streamState = .failed
-            composerNotice = ComposerNotice(message: "Approval response didn’t reach the gateway. Try again.", tone: .error)
+            composerNotice = ComposerNotice(message: "审批响应未成功发送到网关，请重试。", tone: .error)
         }
     }
 
@@ -211,7 +211,7 @@ final class ChatViewModel {
         streamTask = nil
         streamConnectionID = UUID()
         if showNotice {
-            composerNotice = ComposerNotice(message: "Live updates stopped. Pull to refresh if the run continued on the gateway.", tone: .warning)
+            composerNotice = ComposerNotice(message: "实时更新已停止；如果网关上的运行仍在继续，请下拉刷新。", tone: .warning)
         }
         streamState = pendingGate == nil ? .idle : .waitingForGate
     }
@@ -223,7 +223,7 @@ final class ChatViewModel {
                 composerNotice = nil
             }
         } else {
-            composerNotice = ComposerNotice(message: "\(attachments.count) image\(attachments.count == 1 ? "" : "s") ready to send with your next message.", tone: .info)
+            composerNotice = ComposerNotice(message: "已准备好 \(attachments.count) 张图片，可随下一条消息一起发送。", tone: .info)
         }
     }
 
@@ -237,7 +237,7 @@ final class ChatViewModel {
         eventFeed = []
         streamState = history.pendingGate == nil ? .idle : .waitingForGate
         if history.pendingGate != nil {
-            composerNotice = ComposerNotice(message: "Approval is required before the active run can continue.", tone: .warning)
+            composerNotice = ComposerNotice(message: "需要审批后当前运行才能继续。", tone: .warning)
         } else if streamState != .failed {
             composerNotice = nil
         }
@@ -273,7 +273,7 @@ final class ChatViewModel {
 
     private func handleStreamFailure(_ error: Error) {
         errorMessage = error.localizedDescription
-        composerNotice = ComposerNotice(message: "Stream disconnected. Refresh the thread to recover the latest state.", tone: .error)
+        composerNotice = ComposerNotice(message: "流式连接已断开，请刷新会话以恢复最新状态。", tone: .error)
         if streamState != .waitingForGate {
             streamState = .failed
         }
@@ -300,7 +300,7 @@ final class ChatViewModel {
         case "status":
             let statusMessage = (event.message ?? "").lowercased()
             if statusMessage == "awaiting approval" {
-                composerNotice = ComposerNotice(message: "The run is waiting for your approval.", tone: .warning)
+                composerNotice = ComposerNotice(message: "当前运行正在等待你的审批。", tone: .warning)
                 streamState = .waitingForGate
                 scheduleHistoryRefresh()
             } else if statusMessage == "done" {
@@ -325,25 +325,25 @@ final class ChatViewModel {
                     threadID: event.threadID ?? selectedThread?.id.uuidString ?? "",
                     gateName: event.gateName ?? "approval",
                     toolName: event.toolName ?? event.name ?? "Tool",
-                    description: event.description ?? event.message ?? "Approval required",
+                    description: event.description ?? event.message ?? "需要审批",
                     parameters: event.parameters ?? "",
                     resumeKind: event.resumeKind ?? .null
                 )
             }
-            composerNotice = ComposerNotice(message: "Approval is required before the run can continue.", tone: .warning)
+            composerNotice = ComposerNotice(message: "需要审批后本次运行才能继续。", tone: .warning)
             pendingUserMessage = nil
             streamState = .waitingForGate
             scheduleHistoryRefresh()
         case "gate_resolved":
             pendingGate = nil
             composerNotice = (event.resolution ?? "").lowercased() == "approved"
-                ? ComposerNotice(message: "Approval sent. Waiting for the run to resume.", tone: .info)
+                ? ComposerNotice(message: "审批已发送，等待运行恢复。", tone: .info)
                 : nil
             streamState = (event.resolution ?? "").lowercased() == "approved" ? .streaming : .idle
             scheduleHistoryRefresh()
         case "error":
-            errorMessage = event.primaryText ?? "Unknown gateway error"
-            composerNotice = ComposerNotice(message: "Gateway returned an error for the current run.", tone: .error)
+            errorMessage = event.primaryText ?? "未知网关错误"
+            composerNotice = ComposerNotice(message: "网关为当前运行返回了错误。", tone: .error)
             streamState = .failed
         default:
             break
@@ -390,7 +390,7 @@ final class ChatViewModel {
         eventFeed = []
         streamState = pendingGate == nil ? .idle : .waitingForGate
         if pendingGate != nil {
-            composerNotice = ComposerNotice(message: "Approval is required before the active run can continue.", tone: .warning)
+            composerNotice = ComposerNotice(message: "需要审批后当前运行才能继续。", tone: .warning)
         } else if streamState != .failed {
             composerNotice = nil
         }
@@ -402,8 +402,8 @@ final class ChatViewModel {
         }
 
         eventFeed = [
-            ChatEvent(type: "thinking", threadID: selectedThread?.id.uuidString, requestID: nil, message: "Inspecting demo data", content: nil, name: nil, toolName: nil, gateName: nil, description: nil, parameters: nil, preview: nil, detail: nil, resolution: nil, success: nil, resumeKind: nil),
-            ChatEvent(type: "tool_started", threadID: selectedThread?.id.uuidString, requestID: nil, message: "Preparing native preview", content: nil, name: nil, toolName: "demo.preview", gateName: nil, description: nil, parameters: nil, preview: nil, detail: nil, resolution: nil, success: true, resumeKind: nil)
+            ChatEvent(type: "thinking", threadID: selectedThread?.id.uuidString, requestID: nil, message: "正在检查演示数据", content: nil, name: nil, toolName: nil, gateName: nil, description: nil, parameters: nil, preview: nil, detail: nil, resolution: nil, success: nil, resumeKind: nil),
+            ChatEvent(type: "tool_started", threadID: selectedThread?.id.uuidString, requestID: nil, message: "正在准备原生预览", content: nil, name: nil, toolName: "demo.preview", gateName: nil, description: nil, parameters: nil, preview: nil, detail: nil, resolution: nil, success: true, resumeKind: nil)
         ]
         streamState = .streaming
 
@@ -418,21 +418,21 @@ final class ChatViewModel {
                 threadID: selectedThread?.id.uuidString ?? "",
                 gateName: "approval",
                 toolName: "demo.preview",
-                description: "Approve this simulated production action to continue the demo run.",
+                description: "请审批这个模拟的生产操作，以继续演示运行。",
                 parameters: "mode=demo",
                 resumeKind: .string("continue")
             )
             pendingUserMessage = nil
             streamState = .waitingForGate
-            composerNotice = ComposerNotice(message: "Demo mode is waiting for your approval.", tone: .warning)
-            eventFeed.insert(ChatEvent(type: "gate_required", threadID: selectedThread?.id.uuidString, requestID: pendingGate?.requestID, message: "Approval required", content: nil, name: nil, toolName: "demo.preview", gateName: "approval", description: pendingGate?.description, parameters: pendingGate?.parameters, preview: nil, detail: nil, resolution: nil, success: nil, resumeKind: .string("continue")), at: 0)
+            composerNotice = ComposerNotice(message: "演示模式正在等待你的审批。", tone: .warning)
+            eventFeed.insert(ChatEvent(type: "gate_required", threadID: selectedThread?.id.uuidString, requestID: pendingGate?.requestID, message: "需要审批", content: nil, name: nil, toolName: "demo.preview", gateName: "approval", description: pendingGate?.description, parameters: pendingGate?.parameters, preview: nil, detail: nil, resolution: nil, success: nil, resumeKind: .string("continue")), at: 0)
             return
         }
 
         pendingGate = nil
         pendingUserMessage = nil
         streamState = .idle
-        composerNotice = ComposerNotice(message: "Demo reply completed.", tone: .info)
+        composerNotice = ComposerNotice(message: "演示回复已完成。", tone: .info)
         eventFeed.insert(ChatEvent(type: "response", threadID: selectedThread?.id.uuidString, requestID: nil, message: nil, content: reply, name: nil, toolName: nil, gateName: nil, description: nil, parameters: nil, preview: nil, detail: nil, resolution: nil, success: true, resumeKind: nil), at: 0)
 
         let nextTurn = TurnInfo(
@@ -440,14 +440,14 @@ final class ChatViewModel {
             userInput: message,
             response: reply,
             state: "completed",
-            startedAt: "Just now",
-            completedAt: "Just now",
+            startedAt: "刚刚",
+            completedAt: "刚刚",
             toolCalls: [
                 ToolCallInfo(
                     name: attachments.isEmpty ? "demo.preview" : "demo.vision",
                     hasResult: true,
                     hasError: false,
-                    resultPreview: attachments.isEmpty ? "Rendered a text-only preview response." : "Rendered a multimodal preview with \(attachments.count) attached image\(attachments.count == 1 ? "" : "s").",
+                    resultPreview: attachments.isEmpty ? "已生成纯文本预览回复。" : "已生成包含 \(attachments.count) 张附加图片的多模态预览。",
                     error: nil,
                     rationale: nil
                 )
@@ -461,7 +461,7 @@ final class ChatViewModel {
     }
 
     private func configurationNarrative(for attachments: [ComposerAttachment]) -> String? {
-        attachments.isEmpty ? "This response was generated from the built-in demo dataset." : "This response used the built-in demo dataset plus the attached preview images."
+        attachments.isEmpty ? "此回复基于内置演示数据集生成。" : "此回复基于内置演示数据集和附加的预览图片生成。"
     }
 
     private func updateSelectedThreadMetadata(turnCount: Int, state: String) {
@@ -471,7 +471,7 @@ final class ChatViewModel {
             state: state,
             turnCount: turnCount,
             createdAt: selectedThread.createdAt,
-            updatedAt: "Just now",
+            updatedAt: "刚刚",
             title: selectedThread.title,
             threadType: selectedThread.threadType,
             channel: selectedThread.channel

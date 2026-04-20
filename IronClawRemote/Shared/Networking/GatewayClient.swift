@@ -9,13 +9,13 @@ enum GatewayError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
-            return "Invalid response from gateway."
+            return "网关返回了无效响应。"
         case .invalidURL:
-            return "Invalid gateway URL."
+            return "网关地址无效。"
         case .httpError(let code, let message):
-            return "Gateway error \(code): \(message)"
+            return "网关错误 \(code)：\(message)"
         case .missingToken:
-            return "Gateway token is required."
+            return "需要提供网关令牌。"
         }
     }
 }
@@ -138,7 +138,7 @@ struct GatewayClient {
         }
 
         let text = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
-        return text?.isEmpty == false ? text! : "Unknown error"
+        return text?.isEmpty == false ? text! : "未知错误"
     }
 }
 

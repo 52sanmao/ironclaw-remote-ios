@@ -60,11 +60,11 @@ enum AppTab: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .chat: "Chat"
-        case .workspace: "Workspace"
-        case .activity: "Activity"
-        case .discover: "Discover"
-        case .settings: "Settings"
+        case .chat: "聊天"
+        case .workspace: "工作区"
+        case .activity: "活动"
+        case .discover: "发现"
+        case .settings: "设置"
         }
     }
 
@@ -88,9 +88,9 @@ enum ThemePreference: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .system: "System"
-        case .light: "Light"
-        case .dark: "Dark"
+        case .system: "跟随系统"
+        case .light: "浅色"
+        case .dark: "深色"
         }
     }
 }

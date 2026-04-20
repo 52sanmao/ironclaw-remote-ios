@@ -10,16 +10,16 @@ struct ThreadSidebarView: View {
     var body: some View {
         List(selection: .constant(selectedThread?.id)) {
             if let assistantThread {
-                Section("Assistant") {
-                    threadRow(assistantThread, roleLabel: "Assistant")
+                Section("助手") {
+                    threadRow(assistantThread, roleLabel: "助手")
                 }
             }
             Section {
                 Button(action: onNewThread) {
-                    Label("New Thread", systemImage: "plus.circle.fill")
+                    Label("新建会话", systemImage: "plus.circle.fill")
                 }
             }
-            Section("Conversations") {
+            Section("会话列表") {
                 ForEach(threads) { thread in
                     threadRow(thread)
                 }
@@ -45,8 +45,8 @@ struct ThreadSidebarView: View {
                             if let roleLabel {
                                 badge(roleLabel, color: ICColor.accent)
                             }
-                            badge(thread.state.capitalized, color: statusColor(for: thread.state))
-                            badge("\(thread.turnCount) turns", color: ICColor.textSecondary)
+                            badge(localizedStateTitle(for: thread.state), color: statusColor(for: thread.state))
+                            badge("\(thread.turnCount) 轮", color: ICColor.textSecondary)
                         }
                     }
                     Spacer(minLength: ICSpacing.sm)
@@ -79,9 +79,31 @@ struct ThreadSidebarView: View {
 
     private func fallbackTitle(for thread: ThreadInfo) -> String {
         if let threadType = thread.threadType, !threadType.isEmpty {
-            return threadType.capitalized
+            switch threadType.lowercased() {
+            case "assistant":
+                return "助手"
+            case "conversation":
+                return "会话"
+            default:
+                return threadType
+            }
         }
-        return "Conversation"
+        return "会话"
+    }
+
+    private func localizedStateTitle(for state: String) -> String {
+        switch state.lowercased() {
+        case "running", "active", "streaming":
+            return "运行中"
+        case "waiting", "queued", "paused", "pending":
+            return "等待中"
+        case "failed", "error":
+            return "失败"
+        case "ready", "completed", "success", "succeeded":
+            return "就绪"
+        default:
+            return state
+        }
     }
 
     private func statusColor(for state: String) -> Color {

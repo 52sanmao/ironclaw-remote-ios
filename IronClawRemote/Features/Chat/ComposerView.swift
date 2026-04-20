@@ -90,7 +90,7 @@ struct ComposerView: View {
             HStack(alignment: .bottom, spacing: ICSpacing.sm) {
                 attachmentButton
 
-                TextField("Message or / for commands…", text: $text, axis: .vertical)
+                TextField("输入消息，或输入 / 使用命令…", text: $text, axis: .vertical)
                     .textFieldStyle(.roundedBorder)
                     .lineLimit(1...6)
                     .disabled(isBusy)
@@ -107,14 +107,14 @@ struct ComposerView: View {
                             .font(.system(size: 28))
                     }
                     .tint(ICColor.danger)
-                    .accessibilityLabel("Stop live response")
+                    .accessibilityLabel("停止实时回复")
                 } else {
                     Button(action: onSend) {
                         Image(systemName: "arrow.up.circle.fill")
                             .font(.system(size: 28))
                     }
                     .disabled(!canSend)
-                    .accessibilityLabel("Send message")
+                    .accessibilityLabel("发送消息")
                 }
             }
             .padding(ICSpacing.md)
@@ -157,7 +157,7 @@ struct ComposerView: View {
             }
         }
         .disabled(isBusy || isPreparingAttachments)
-        .accessibilityLabel("Attach images")
+        .accessibilityLabel("添加图片")
     }
 
     private var attachmentTray: some View {
@@ -167,7 +167,7 @@ struct ComposerView: View {
                     AttachmentChip(attachment: attachment)
                 }
 
-                Button("Clear") {
+                Button("清空") {
                     selectedPhotos = []
                     attachmentErrorMessage = nil
                     onAttachmentsChanged([])
@@ -186,11 +186,11 @@ struct ComposerView: View {
             }
 
             if isPreparingAttachments {
-                footerRow(text: "Preparing image attachments…", color: ICColor.textSecondary, systemImage: "photo.on.rectangle.angled")
+                footerRow(text: "正在准备图片附件…", color: ICColor.textSecondary, systemImage: "photo.on.rectangle.angled")
             }
 
             if shouldShowDraftHint {
-                footerRow(text: "Add a message before sending the attached images.", color: ICColor.warning, systemImage: "text.cursor")
+                footerRow(text: "请先输入消息，再发送已附加的图片。", color: ICColor.warning, systemImage: "text.cursor")
             }
 
             if let attachmentErrorMessage {
@@ -223,13 +223,13 @@ struct ComposerView: View {
         case .idle:
             return nil
         case .sending:
-            return "Sending your message…"
+            return "正在发送消息…"
         case .streaming:
-            return "IronClaw is responding…"
+            return "IronClaw 正在回复…"
         case .waitingForGate:
-            return "Awaiting approval before the run can continue."
+            return "运行继续前正在等待审批。"
         case .failed:
-            return "Live response needs attention."
+            return "实时回复需要处理。"
         }
     }
 
@@ -315,8 +315,8 @@ struct ComposerView: View {
             isPreparingAttachments = false
             if failedCount > 0 {
                 attachmentErrorMessage = loadedAttachments.isEmpty
-                    ? "Couldn’t prepare the selected images."
-                    : "Some selected images couldn’t be attached."
+                    ? "无法准备所选图片。"
+                    : "部分所选图片无法附加。"
             }
         }
     }
@@ -328,7 +328,7 @@ struct ComposerView: View {
         if mimeType == "image/png" || mimeType == "image/gif" {
             let fileExtension = primaryType?.preferredFilenameExtension ?? "img"
             return ComposerAttachment(
-                filename: "Image \(index).\(fileExtension)",
+                filename: "图片 \(index).\(fileExtension)",
                 mediaType: mimeType ?? "application/octet-stream",
                 data: data
             )
@@ -336,7 +336,7 @@ struct ComposerView: View {
 
         if let image = UIImage(data: data), let jpegData = image.jpegData(compressionQuality: 0.82) {
             return ComposerAttachment(
-                filename: "Image \(index).jpg",
+                filename: "图片 \(index).jpg",
                 mediaType: "image/jpeg",
                 data: jpegData
             )
@@ -344,7 +344,7 @@ struct ComposerView: View {
 
         let fileExtension = primaryType?.preferredFilenameExtension ?? "img"
         return ComposerAttachment(
-            filename: "Image \(index).\(fileExtension)",
+            filename: "图片 \(index).\(fileExtension)",
             mediaType: mimeType ?? "application/octet-stream",
             data: data
         )

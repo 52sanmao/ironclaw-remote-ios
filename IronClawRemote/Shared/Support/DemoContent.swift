@@ -3,16 +3,16 @@ import Foundation
 enum DemoContent {
     static let demoHost = "demo.ironclaw.local"
     static let gatewayConfiguration = GatewayConfiguration(
-        name: "IronClaw Demo",
+        name: "IronClaw 演示",
         baseURL: URL(string: "https://\(demoHost)")!,
         token: ""
     )
 
     static let profile = GatewayProfile(
         id: "demo-operator",
-        displayName: "Demo Operator",
+        displayName: "演示操作员",
         email: "demo@ironclaw.local",
-        role: "Preview Mode"
+        role: "预览模式"
     )
 
     static let assistantThreadID = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
@@ -25,7 +25,7 @@ enum DemoContent {
         turnCount: 3,
         createdAt: "2026-04-20 08:40",
         updatedAt: "2026-04-20 09:12",
-        title: "IronClaw Assistant",
+        title: "IronClaw 助手",
         threadType: "assistant",
         channel: "ops"
     )
@@ -37,7 +37,7 @@ enum DemoContent {
             turnCount: 2,
             createdAt: "2026-04-20 08:55",
             updatedAt: "2026-04-20 09:15",
-            title: "Morning Ops Review",
+            title: "晨间运维巡检",
             threadType: "conversation",
             channel: "deploy"
         ),
@@ -47,7 +47,7 @@ enum DemoContent {
             turnCount: 1,
             createdAt: "2026-04-20 09:03",
             updatedAt: "2026-04-20 09:18",
-            title: "Approval Flow Demo",
+            title: "审批流演示",
             threadType: "conversation",
             channel: "production"
         )
@@ -57,8 +57,8 @@ enum DemoContent {
         operationsThreadID: [
             TurnInfo(
                 turnNumber: 1,
-                userInput: "Give me the morning gateway summary.",
-                response: "All core services are healthy. Jobs are draining normally, one deploy routine is queued, and no production incidents are open.",
+                userInput: "给我一份今天早上的网关摘要。",
+                response: "所有核心服务都很健康。任务正在正常排空，当前有一个部署例程排队中，生产环境没有未关闭事件。",
                 state: "completed",
                 startedAt: "2026-04-20 08:58",
                 completedAt: "2026-04-20 08:58",
@@ -67,18 +67,18 @@ enum DemoContent {
                         name: "jobs.snapshot",
                         hasResult: true,
                         hasError: false,
-                        resultPreview: "3 running jobs, 1 queued routine, 0 failed missions.",
+                        resultPreview: "3 个运行中任务，1 个排队例程，0 个失败使命。",
                         error: nil,
                         rationale: nil
                     )
                 ],
                 generatedImages: [],
-                narrative: "A compact operational snapshot pulled from the demo gateway."
+                narrative: "这是从演示网关提取的一份精简运行摘要。"
             ),
             TurnInfo(
                 turnNumber: 2,
-                userInput: "Generate a visual status card for the deploy queue.",
-                response: "I prepared a compact queue card so you can preview how generated media appears in the native chat timeline.",
+                userInput: "为部署队列生成一张可视化状态卡片。",
+                response: "我准备了一张精简的队列卡片，方便你预览原生聊天时间线里生成媒体的显示效果。",
                 state: "completed",
                 startedAt: "2026-04-20 09:11",
                 completedAt: "2026-04-20 09:12",
@@ -87,7 +87,7 @@ enum DemoContent {
                         name: "image.render",
                         hasResult: true,
                         hasError: false,
-                        resultPreview: "Rendered a lightweight status card preview.",
+                        resultPreview: "已渲染轻量状态卡片预览。",
                         error: nil,
                         rationale: nil
                     )
@@ -99,14 +99,14 @@ enum DemoContent {
                         path: nil
                     )
                 ],
-                narrative: "This turn demonstrates image results embedded directly inside chat history."
+                narrative: "这一轮用于演示聊天记录里直接嵌入图像结果的效果。"
             )
         ],
         approvalThreadID: [
             TurnInfo(
                 turnNumber: 1,
-                userInput: "Prepare a production restart plan for the API workers.",
-                response: "I drafted the restart plan. Approval is required before the simulated run can continue.",
+                userInput: "为 API worker 准备一份生产重启计划。",
+                response: "我已经起草了重启计划。继续这个模拟运行前需要审批。",
                 state: "completed",
                 startedAt: "2026-04-20 09:04",
                 completedAt: "2026-04-20 09:05",
@@ -115,20 +115,20 @@ enum DemoContent {
                         name: "deploy.plan",
                         hasResult: true,
                         hasError: false,
-                        resultPreview: "Prepared rolling restart plan for 3 worker pools.",
+                        resultPreview: "已为 3 组 worker 池准备滚动重启计划。",
                         error: nil,
                         rationale: nil
                     )
                 ],
                 generatedImages: [],
-                narrative: "Use this thread to preview the approval card and gate resolution flow."
+                narrative: "这个会话用于预览审批卡片和审批处理流程。"
             )
         ],
         assistantThreadID: [
             TurnInfo(
                 turnNumber: 1,
-                userInput: "What can this app do in demo mode?",
-                response: "You can browse sample threads, stream a fake response, inspect generated image results, preview workspace files, and open activity drill-down screens without a live gateway.",
+                userInput: "这个应用在演示模式下能做什么？",
+                response: "你可以浏览示例会话、查看模拟流式回复、检查生成图像结果、预览工作区文件，并在没有真实网关的情况下打开活动详情界面。",
                 state: "completed",
                 startedAt: "2026-04-20 08:45",
                 completedAt: "2026-04-20 08:45",
@@ -145,7 +145,7 @@ enum DemoContent {
             threadID: approvalThreadID.uuidString,
             gateName: "approval",
             toolName: "deploy.restart",
-            description: "Approve a simulated rolling restart for the production API worker pools.",
+            description: "请审批这个模拟的生产 API worker 池滚动重启。",
             parameters: "cluster=prod-api, strategy=rolling, max_unavailable=1",
             resumeKind: .string("continue")
         )
@@ -162,35 +162,35 @@ enum DemoContent {
     static let memoryFiles: [String: MemoryReadResponse] = [
         "playbooks/restart-api.md": MemoryReadResponse(
             path: "playbooks/restart-api.md",
-            content: "# Restart API Workers\n\n1. Drain queue depth below 20.\n2. Restart one worker pool at a time.\n3. Verify /healthz and queue lag after each pool.\n4. Watch jobs dashboard for 10 minutes.",
+            content: "# 重启 API Workers\n\n1. 将队列深度排空到 20 以下。\n2. 每次只重启一组 worker 池。\n3. 每组完成后检查 /healthz 和队列延迟。\n4. 持续观察任务面板 10 分钟。",
             updatedAt: "2026-04-20 08:30"
         ),
         "playbooks/deploy-checklist.md": MemoryReadResponse(
             path: "playbooks/deploy-checklist.md",
-            content: "# Deploy Checklist\n\n- Validate gateway connectivity\n- Confirm no pending approvals\n- Snapshot active jobs\n- Notify operators in #deploy-room\n- Start routine and monitor first 5 minutes",
+            content: "# 部署清单\n\n- 验证网关连接\n- 确认没有待审批项\n- 快照当前活动任务\n- 在 #deploy-room 通知操作员\n- 启动例程并观察前 5 分钟",
             updatedAt: "2026-04-20 08:52"
         ),
         "snapshots/morning-brief.md": MemoryReadResponse(
             path: "snapshots/morning-brief.md",
-            content: "# Morning Brief\n\n- Gateway: healthy\n- Jobs running: 3\n- Routines queued: 1\n- Missions blocked: 0\n- Next release window: 10:30 local time",
+            content: "# 晨间简报\n\n- 网关：健康\n- 运行中任务：3\n- 排队例程：1\n- 阻塞使命：0\n- 下一个发布时间窗口：本地时间 10:30",
             updatedAt: "2026-04-20 09:10"
         )
     ]
 
     static let jobs: [JobSummary] = [
-        JobSummary(id: "job-demo-sync", title: "Workspace sync", source: "gateway.sync", status: "running", createdAt: "2026-04-20 09:02"),
-        JobSummary(id: "job-demo-render", title: "Status card render", source: "image.render", status: "completed", createdAt: "2026-04-20 09:12"),
-        JobSummary(id: "job-demo-refresh", title: "Routine refresh", source: "activity.refresh", status: "queued", createdAt: "2026-04-20 09:14")
+        JobSummary(id: "job-demo-sync", title: "工作区同步", source: "gateway.sync", status: "running", createdAt: "2026-04-20 09:02"),
+        JobSummary(id: "job-demo-render", title: "状态卡片渲染", source: "image.render", status: "completed", createdAt: "2026-04-20 09:12"),
+        JobSummary(id: "job-demo-refresh", title: "例程刷新", source: "activity.refresh", status: "queued", createdAt: "2026-04-20 09:14")
     ]
 
     static let routines: [RoutineSummary] = [
-        RoutineSummary(id: "routine-demo-deploy", name: "Deploy queue watcher", trigger: "Every 5 minutes", status: "active"),
-        RoutineSummary(id: "routine-demo-memory", name: "Memory digest", trigger: "Weekdays 09:00", status: "ready")
+        RoutineSummary(id: "routine-demo-deploy", name: "部署队列观察", trigger: "每 5 分钟", status: "active"),
+        RoutineSummary(id: "routine-demo-memory", name: "记忆摘要", trigger: "工作日 09:00", status: "ready")
     ]
 
     static let missions: [MissionSummary] = [
-        MissionSummary(id: "mission-demo-polish", name: "Native app polish", goal: "Close parity gaps between the iOS client and the web control surface.", status: "active"),
-        MissionSummary(id: "mission-demo-demo", name: "Offline preview", goal: "Keep a no-backend demo path available for design review and CI screenshots.", status: "ready")
+        MissionSummary(id: "mission-demo-polish", name: "原生应用打磨", goal: "缩小 iOS 客户端与 Web 控制面的能力差距。", status: "active"),
+        MissionSummary(id: "mission-demo-demo", name: "离线预览", goal: "为设计评审和 CI 截图保留一个无需后端的演示路径。", status: "ready")
     ]
 
     static func searchResults(for query: String) -> [MemoryListEntry] {
@@ -210,22 +210,22 @@ enum DemoContent {
         let normalized = message.lowercased()
 
         if normalized.contains("deploy") {
-            return "The demo deploy queue is stable. One routine is queued, current job throughput is healthy, and there are no blocked missions."
+            return "演示部署队列状态稳定。当前有一个例程排队，任务吞吐健康，没有被阻塞的使命。"
         }
 
         if normalized.contains("memory") || normalized.contains("workspace") {
-            return "The demo workspace contains playbooks, snapshots, and search results so you can preview file browsing without connecting to a gateway."
+            return "演示工作区包含操作手册、快照和搜索结果，因此你无需连接网关也能预览文件浏览体验。"
         }
 
         if normalized.contains("image") || normalized.contains("visual") || normalized.contains("render") {
-            return "I generated a lightweight preview response so you can inspect how streamed text and generated images appear together in the native timeline."
+            return "我生成了一条轻量预览回复，方便你检查原生时间线里流式文本与生成图像的组合显示效果。"
         }
 
         if attachmentCount > 0 {
-            return "I received \(attachmentCount) image\(attachmentCount == 1 ? "" : "s") in demo mode. This preview simulates a multimodal reply without sending data to a real gateway."
+            return "我在演示模式下收到了 \(attachmentCount) 张图片。这个预览会模拟多模态回复，但不会把数据发送到真实网关。"
         }
 
-        return "Demo mode is active. Connect a live IronClaw gateway in Settings when you want real threads, workspace files, and operational activity."
+        return "当前为演示模式。需要真实会话、工作区文件和运行活动时，请在设置中连接正式 IronClaw 网关。"
     }
 
     static func shouldRequireApproval(for message: String) -> Bool {

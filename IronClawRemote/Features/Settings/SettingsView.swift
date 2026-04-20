@@ -7,24 +7,24 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Gateway") {
-                    LabeledContent("Name", value: appState.gatewayConfiguration.name)
-                    LabeledContent("Base URL", value: appState.gatewayConfiguration.baseURL.absoluteString)
+                Section("网关") {
+                    LabeledContent("名称", value: appState.gatewayConfiguration.name)
+                    LabeledContent("基础地址", value: appState.gatewayConfiguration.baseURL.absoluteString)
                     if appState.gatewayConfiguration.isDemoMode {
-                        Text("Demo mode is active. Connect a live gateway here when you want real backend data.")
+                        Text("当前为演示模式。需要真实后端数据时，可在这里连接正式网关。")
                             .font(.caption)
                             .foregroundStyle(ICColor.textSecondary)
                     }
-                    Button("Edit Connection") {
+                    Button("编辑连接") {
                         showingConnectionSheet = true
                     }
-                    Button("Test Connection") {
+                    Button("测试连接") {
                         Task { await appState.refreshProfile() }
                     }
                 }
 
-                Section("Appearance") {
-                    Picker("Theme", selection: Binding(
+                Section("外观") {
+                    Picker("主题", selection: Binding(
                         get: { appState.preferredTheme },
                         set: { appState.preferredTheme = $0 }
                     )) {
@@ -34,26 +34,26 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Profile") {
+                Section("资料") {
                     if let profile = appState.session.profile {
-                        LabeledContent("Name", value: profile.displayName)
+                        LabeledContent("名称", value: profile.displayName)
                         if let email = profile.email {
-                            LabeledContent("Email", value: email)
+                            LabeledContent("邮箱", value: email)
                         }
                         if let role = profile.role {
-                            LabeledContent("Role", value: role)
+                            LabeledContent("角色", value: role)
                         }
                     } else {
-                        Text(appState.session.lastErrorMessage ?? "No profile loaded yet.")
+                        Text(appState.session.lastErrorMessage ?? "尚未加载资料。")
                             .foregroundStyle(ICColor.textSecondary)
                     }
                 }
 
-                Section("About") {
-                    Text("IronClaw Remote is a native iOS controller for the IronClaw gateway.")
+                Section("关于") {
+                    Text("IronClaw Remote 是 IronClaw 网关的原生 iOS 控制端。")
                 }
             }
-            .navigationTitle("Settings")
+            .navigationTitle("设置")
             .sheet(isPresented: $showingConnectionSheet) {
                 GatewayConnectionView()
             }
