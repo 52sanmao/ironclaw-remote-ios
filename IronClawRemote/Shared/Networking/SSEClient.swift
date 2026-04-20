@@ -14,7 +14,9 @@ final class SSEClient {
     }
 
     func stream(url: URL) -> AsyncThrowingStream<SSEEventEnvelope, Error> {
-        AsyncThrowingStream { continuation in
+        let session = self.session
+
+        return AsyncThrowingStream { continuation in
             let task = Task {
                 var request = URLRequest(url: url)
                 request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
