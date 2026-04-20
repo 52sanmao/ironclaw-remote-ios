@@ -31,34 +31,39 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
-      - name: Build app for iOS Simulator
+      - name: Build app for iPhoneOS
         run: |
           set -euo pipefail
           xcodebuild \
             -project "IronClawRemote.xcodeproj" \
             -scheme "IronClawRemote" \
-            -configuration Debug \
-            -destination 'generic/platform=iOS Simulator' \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
             -derivedDataPath "$RUNNER_TEMP/DerivedData" \
             CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
             build
 
-      - name: Package simulator app artifact
+      - name: Package IPA artifact
         run: |
           set -euo pipefail
-          APP_PATH=$(find "$RUNNER_TEMP/DerivedData/Build/Products" -path "*-iphonesimulator/*.app" -type d | head -1)
+          APP_PATH=$(find "$RUNNER_TEMP/DerivedData/Build/Products" -path "*-iphoneos/*.app" -type d | head -1)
           if [ -z "$APP_PATH" ]; then
             echo "No built .app found"
             find "$RUNNER_TEMP/DerivedData/Build/Products" -maxdepth 3 -print
             exit 1
           fi
-          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$RUNNER_TEMP/IronClawRemote-simulator-app.zip"
+          mkdir -p "$RUNNER_TEMP/Payload"
+          cp -R "$APP_PATH" "$RUNNER_TEMP/Payload/"
+          cd "$RUNNER_TEMP"
+          zip -r "IronClawRemote.ipa" Payload
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: IronClawRemote-simulator-app
+          name: IronClawRemote-ipa
           path: |
-            ${{ runner.temp }}/IronClawRemote-simulator-app.zip
+            ${{ runner.temp }}/IronClawRemote.ipa
             ${{ runner.temp }}/DerivedData/Build/Products
           retention-days: 30
