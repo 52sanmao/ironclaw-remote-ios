@@ -99,11 +99,14 @@ enum ConnectionStatus: String, Equatable {
 }
 
 struct GatewayProfile: Codable, Equatable {
-    var id: String?
+    var id: String? = nil
     var displayName: String
-    var email: String?
-    var role: String?
-    var status: String?
+    var email: String? = nil
+    var role: String? = nil
+    var status: String? = nil
+    var avatarURL: String? = nil
+    var createdAt: String? = nil
+    var lastLoginAt: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -111,5 +114,20 @@ struct GatewayProfile: Codable, Equatable {
         case email
         case role
         case status
+        case avatarURL = "avatar_url"
+        case createdAt = "created_at"
+        case lastLoginAt = "last_login_at"
+    }
+}
+
+struct GatewayProfileUpdateResponse: Codable, Equatable {
+    let id: String
+    let displayName: String
+    let updated: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case displayName = "display_name"
+        case updated
     }
 }

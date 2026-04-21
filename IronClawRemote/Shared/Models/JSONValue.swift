@@ -27,6 +27,35 @@ enum JSONValue: Codable, Equatable {
         }
     }
 
+    init(any value: Any) {
+        if let string = value as? String {
+            self = .string(string)
+        } else if let number = value as? NSNumber, CFGetTypeID(number) == CFBooleanGetTypeID() {
+            self = .bool(number.boolValue)
+        } else if let number = value as? Double {
+            self = .number(number)
+        } else if let number = value as? Int {
+            self = .number(Double(number))
+        } else if let dict = value as? [String: Any] {
+            self = .object(dict.mapValues { JSONValue(any: $0) })
+        } else if let array = value as? [Any] {
+            self = .array(array.map { JSONValue(any: $0) })
+        } else {
+            self = .null
+        }
+    }
+
+    var rawValue: Any {
+        switch self {
+        case .string(let value): return value
+        case .number(let value): return value
+        case .bool(let value): return value
+        case .array(let value): return value.map { $0.rawValue }
+        case .object(let value): return value.mapValues { $0.rawValue }
+        case .null: return NSNull()
+        }
+    }
+
     func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         switch self {

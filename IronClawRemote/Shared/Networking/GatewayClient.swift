@@ -38,6 +38,81 @@ struct RoutineToggleRequestDTO: Encodable {
     let enabled: Bool
 }
 
+struct InstallExtensionRequestDTO: Encodable {
+    let name: String
+    let url: String?
+    let kind: String?
+}
+
+struct ExtensionSetupSubmitRequestDTO: Encodable {
+    let secrets: [String: String]
+    let fields: [String: String]
+}
+
+struct UpdateProfileRequestDTO: Encodable {
+    let displayName: String?
+    let metadata: JSONValue?
+
+    enum CodingKeys: String, CodingKey {
+        case displayName = "display_name"
+        case metadata
+    }
+}
+
+struct SettingWriteRequestDTO: Encodable {
+    let value: JSONValue
+}
+
+struct SettingsImportRequestDTO: Encodable {
+    let settings: [String: JSONValue]
+}
+
+struct UpdateLogLevelRequestDTO: Encodable {
+    let level: String
+}
+
+struct AdminUserCreateRequestDTO: Encodable {
+    let displayName: String
+    let email: String?
+    let role: String?
+
+    enum CodingKeys: String, CodingKey {
+        case displayName = "display_name"
+        case email
+        case role
+    }
+}
+
+struct AdminUserUpdateRequestDTO: Encodable {
+    let displayName: String?
+    let email: String?
+    let role: String?
+    let metadata: JSONValue?
+
+    enum CodingKeys: String, CodingKey {
+        case displayName = "display_name"
+        case email
+        case role
+        case metadata
+    }
+}
+
+struct AdminUserSecretWriteRequestDTO: Encodable {
+    let value: String
+    let provider: String?
+    let expiresInDays: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case value
+        case provider
+        case expiresInDays = "expires_in_days"
+    }
+}
+
+struct PairingApproveRequestDTO: Encodable {
+    let code: String
+}
+
 enum GatewayError: LocalizedError {
     case invalidResponse
     case invalidURL
@@ -64,6 +139,10 @@ struct GatewayClient {
 
     func profile() async throws -> GatewayProfile {
         try await request(path: "/api/profile")
+    }
+
+    func updateProfile(displayName: String? = nil, metadata: JSONValue? = nil) async throws -> GatewayProfileUpdateResponse {
+        try await request(path: "/api/profile", method: "PATCH", body: UpdateProfileRequestDTO(displayName: displayName, metadata: metadata))
     }
 
     func threads() async throws -> ThreadListResponse {
@@ -222,6 +301,25 @@ struct GatewayClient {
         return response.tools
     }
 
+    func extensionRegistry(query: String? = nil) async throws -> [ExtensionRegistryEntry] {
+        let response: ExtensionRegistryResponseDTO = try await request(path: "/api/extensions/registry", queryItems: query?.isEmpty == false ? [
+            URLQueryItem(name: "query", value: query)
+        ] : [])
+        return response.entries
+    }
+
+    func installExtension(name: String, url: String? = nil, kind: String? = nil) async throws -> GatewayActionResponse {
+        try await request(path: "/api/extensions/install", method: "POST", body: InstallExtensionRequestDTO(name: name, url: url, kind: kind))
+    }
+
+    func extensionSetup(name: String) async throws -> ExtensionSetupResponseDTO {
+        try await request(path: "/api/extensions/\(name)/setup")
+    }
+
+    func submitExtensionSetup(name: String, secrets: [String: String], fields: [String: String]) async throws -> GatewayActionResponse {
+        try await request(path: "/api/extensions/\(name)/setup", method: "POST", body: ExtensionSetupSubmitRequestDTO(secrets: secrets, fields: fields))
+    }
+
     func activateExtension(name: String) async throws -> GatewayActionResponse {
         try await request(path: "/api/extensions/\(name)/activate", method: "POST", body: EmptyPayload())
     }
@@ -268,14 +366,124 @@ struct GatewayClient {
         try await request(path: "/api/gateway/status")
     }
 
+    func logsLevel() async throws -> GatewayLogLevel {
+        try await request(path: "/api/logs/level")
+    }
+
+    func setLogsLevel(_ level: String) async throws -> GatewayLogLevel {
+        try await request(path: "/api/logs/level", method: "PUT", body: UpdateLogLevelRequestDTO(level: level))
+    }
+
+    func logEventsStream() throws -> AsyncThrowingStream<GatewayLogEntry, Error> {
+        guard !configuration.effectiveToken.isEmpty else {
+            throw GatewayError.missingToken
+        }
+        let token = configuration.effectiveToken.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? configuration.effectiveToken
+        guard let url = URL(string: "/api/logs/events?token=\(token)", relativeTo: configuration.normalizedBaseURL) else {
+            throw GatewayError.invalidURL
+        }
+
+        let sse = SSEClient(session: session)
+        return AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    for try await envelope in sse.stream(url: url) {
+                        if let event = envelope.event, event != "log" {
+                            continue
+                        }
+                        let data = Data(envelope.data.utf8)
+                        guard let entry = try? JSONDecoder.ironClaw.decode(GatewayLogEntry.self, from: data) else {
+                            continue
+                        }
+                        continuation.yield(entry)
+                    }
+                    continuation.finish()
+                } catch is CancellationError {
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = { _ in
+                task.cancel()
+            }
+        }
+    }
+
     func settings() async throws -> [RemoteSetting] {
         let response: SettingsListResponseDTO = try await request(path: "/api/settings")
         return response.settings
     }
 
+    func exportSettings() async throws -> [String: JSONValue] {
+        let response: SettingsExportResponseDTO = try await request(path: "/api/settings/export")
+        return response.settings
+    }
+
+    func importSettings(_ settings: [String: JSONValue]) async throws {
+        let _: EmptyResponse = try await request(path: "/api/settings/import", method: "POST", body: SettingsImportRequestDTO(settings: settings))
+    }
+
+    func setting(key: String) async throws -> RemoteSetting {
+        try await request(path: "/api/settings/\(key)")
+    }
+
+    func setSetting(key: String, value: JSONValue) async throws {
+        let _: EmptyResponse = try await request(path: "/api/settings/\(key)", method: "PUT", body: SettingWriteRequestDTO(value: value))
+    }
+
+    func deleteSetting(key: String) async throws {
+        let _: EmptyResponse = try await request(path: "/api/settings/\(key)", method: "DELETE", body: Optional<EmptyPayload>.none)
+    }
+
     func adminUsers() async throws -> [AdminConsoleUser] {
         let response: AdminUserListResponseDTO = try await request(path: "/api/admin/users")
         return response.users
+    }
+
+    func adminUserDetail(id: String) async throws -> AdminConsoleUser {
+        try await request(path: "/api/admin/users/\(id)")
+    }
+
+    func createAdminUser(displayName: String, email: String? = nil, role: String? = nil) async throws -> AdminUserCreateResponseDTO {
+        try await request(path: "/api/admin/users", method: "POST", body: AdminUserCreateRequestDTO(displayName: displayName, email: email, role: role))
+    }
+
+    func updateAdminUser(id: String, displayName: String? = nil, email: String? = nil, role: String? = nil, metadata: JSONValue? = nil) async throws -> AdminUserProfileResponseDTO {
+        try await request(path: "/api/admin/users/\(id)", method: "PATCH", body: AdminUserUpdateRequestDTO(displayName: displayName, email: email, role: role, metadata: metadata))
+    }
+
+    func suspendAdminUser(id: String) async throws -> AdminUserStatusResponseDTO {
+        try await request(path: "/api/admin/users/\(id)/suspend", method: "POST", body: EmptyPayload())
+    }
+
+    func activateAdminUser(id: String) async throws -> AdminUserStatusResponseDTO {
+        try await request(path: "/api/admin/users/\(id)/activate", method: "POST", body: EmptyPayload())
+    }
+
+    func deleteAdminUser(id: String) async throws -> AdminUserDeleteResponseDTO {
+        try await request(path: "/api/admin/users/\(id)", method: "DELETE", body: Optional<EmptyPayload>.none)
+    }
+
+    func adminUserSecrets(userID: String) async throws -> [AdminUserSecretRef] {
+        let response: AdminUserSecretsResponseDTO = try await request(path: "/api/admin/users/\(userID)/secrets")
+        return response.secrets
+    }
+
+    func putAdminUserSecret(userID: String, name: String, value: String, provider: String? = nil, expiresInDays: Int? = nil) async throws -> AdminSecretMutationResponseDTO {
+        try await request(path: "/api/admin/users/\(userID)/secrets/\(name)", method: "PUT", body: AdminUserSecretWriteRequestDTO(value: value, provider: provider, expiresInDays: expiresInDays))
+    }
+
+    func deleteAdminUserSecret(userID: String, name: String) async throws -> AdminSecretDeleteResponseDTO {
+        try await request(path: "/api/admin/users/\(userID)/secrets/\(name)", method: "DELETE", body: Optional<EmptyPayload>.none)
+    }
+
+    func pairingRequests(channel: String) async throws -> PairingListResponseDTO {
+        try await request(path: "/api/pairing/\(channel)")
+    }
+
+    func approvePairing(channel: String, code: String) async throws -> GatewayActionResponse {
+        try await request(path: "/api/pairing/\(channel)/approve", method: "POST", body: PairingApproveRequestDTO(code: code))
     }
 
     func adminUsageSummary() async throws -> AdminUsageSummary {

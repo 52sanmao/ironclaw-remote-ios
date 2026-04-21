@@ -23,12 +23,12 @@ struct SettingsView: View {
                 )
                 consoleSection(
                     title: "账户与网关",
-                    routes: [.tokens, .gatewayStatus, .settings]
+                    routes: [.profile, .tokens, .gatewayStatus, .logs, .settings]
                 )
                 if isAdmin {
                     consoleSection(
                         title: "管理员",
-                        routes: [.adminUsers, .adminUsage]
+                        routes: [.adminUsers, .adminUsage, .adminSecrets, .pairing]
                     )
                 }
             }
@@ -121,14 +121,20 @@ struct SettingsView: View {
             AdminUsersView()
         case .adminUsage:
             AdminUsageView()
+        case .profile:
+            ProfileView()
+        case .logs:
+            LogsView()
+        case .adminSecrets:
+            AdminSecretsView()
+        case .pairing:
+            PairingView()
         }
     }
 }
 
 private struct ConsolePreferencesView: View {
     @Environment(AppState.self) private var appState
-    @State private var settings: [RemoteSetting] = []
-    @State private var isLoading = false
     @State private var errorMessage: String?
     @Binding var showingConnectionSheet: Bool
 
@@ -154,63 +160,12 @@ private struct ConsolePreferencesView: View {
             }
 
             Section("远端设置") {
-                if isLoading {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, alignment: .center)
-                } else if let errorMessage {
-                    Text(errorMessage)
-                        .font(.caption)
-                        .foregroundStyle(ICColor.danger)
-                } else if settings.isEmpty {
-                    Text("当前没有可展示的远端设置。")
-                        .font(.caption)
-                        .foregroundStyle(ICColor.textSecondary)
-                } else {
-                    ForEach(settings.prefix(12)) { setting in
-                        VStack(alignment: .leading, spacing: ICSpacing.xxs) {
-                            Text(setting.key)
-                                .font(.subheadline.weight(.medium))
-                            Text(setting.value.compactText)
-                                .font(.caption)
-                                .foregroundStyle(ICColor.textSecondary)
-                                .lineLimit(3)
-                            Text(setting.updatedAt)
-                                .font(.caption2)
-                                .foregroundStyle(ICColor.textSecondary)
-                        }
-                        .padding(.vertical, 4)
-                    }
+                NavigationLink("查看全部设置项") {
+                    SettingsListView()
                 }
             }
         }
         .navigationTitle("设置")
-        .task {
-            await loadSettings()
-        }
-        .refreshable {
-            await loadSettings()
-        }
-    }
-
-    private func loadSettings() async {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
-
-        if appState.gatewayConfiguration.isDemoMode {
-            settings = []
-            return
-        }
-
-        do {
-            let fetchedSettings = try await appState.gatewayClient.settings()
-            settings = fetchedSettings.sorted {
-                $0.key.localizedStandardCompare($1.key) == .orderedAscending
-            }
-        } catch {
-            settings = []
-            errorMessage = error.localizedDescription
-        }
     }
 }
 
@@ -225,6 +180,12 @@ private struct ExtensionsView: View {
 
     var body: some View {
         List {
+            Section {
+                NavigationLink("扩展注册表") {
+                    ExtensionsRegistryView()
+                }
+            }
+
             if let actionMessage {
                 Section {
                     Text(actionMessage)
@@ -288,6 +249,14 @@ private struct ExtensionsView: View {
                                 }
                                 .buttonStyle(.borderedProminent)
                                 .disabled(item.active || busyExtensionName == item.name)
+
+                                if let activationStatus = item.activationStatus,
+                                   ["configured", "pairing", "failed"].contains(activationStatus) || !item.active {
+                                    NavigationLink("配置") {
+                                        ExtensionSetupView(extensionName: item.name)
+                                    }
+                                    .buttonStyle(.bordered)
+                                }
 
                                 Button("移除", role: .destructive) {
                                     Task { await removeExtension(item) }
@@ -907,6 +876,9 @@ private struct AdminUsersView: View {
                         .foregroundStyle(ICColor.textSecondary)
                 } else {
                     ForEach(users) { user in
+                        NavigationLink {
+                            AdminUserDetailView(user: user)
+                        } label: {
                         VStack(alignment: .leading, spacing: ICSpacing.xs) {
                             HStack(alignment: .top, spacing: ICSpacing.sm) {
                                 VStack(alignment: .leading, spacing: ICSpacing.xxs) {
@@ -937,6 +909,7 @@ private struct AdminUsersView: View {
                             }
                         }
                         .padding(.vertical, 4)
+                        }
                     }
                 }
             }

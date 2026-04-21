@@ -67,6 +67,9 @@ struct GatewayActionResponse: Decodable {
     let awaitingToken: Bool?
     let instructions: String?
     let activated: Bool?
+    let verification: JSONValue?
+    let onboardingState: JSONValue?
+    let onboarding: JSONValue?
 
     enum CodingKeys: String, CodingKey {
         case success
@@ -75,7 +78,84 @@ struct GatewayActionResponse: Decodable {
         case awaitingToken = "awaiting_token"
         case instructions
         case activated
+        case verification
+        case onboardingState = "onboarding_state"
+        case onboarding
     }
+}
+
+struct ExtensionRegistryResponseDTO: Decodable {
+    let entries: [ExtensionRegistryEntry]
+}
+
+struct ExtensionRegistryEntry: Decodable, Identifiable {
+    let name: String
+    let displayName: String
+    let kind: String
+    let description: String
+    let keywords: [String]
+    let installed: Bool
+    let version: String?
+
+    var id: String { "\(name)-\(kind)" }
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case displayName = "display_name"
+        case kind
+        case description
+        case keywords
+        case installed
+        case version
+    }
+}
+
+enum ExtensionSetupFieldInputType: String, Decodable {
+    case text
+    case password
+}
+
+struct ExtensionSecretFieldInfo: Decodable, Identifiable {
+    let name: String
+    let prompt: String
+    let optional: Bool
+    let provided: Bool
+    let autoGenerate: Bool
+
+    var id: String { name }
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case prompt
+        case optional
+        case provided
+        case autoGenerate = "auto_generate"
+    }
+}
+
+struct ExtensionSetupFieldInfo: Decodable, Identifiable {
+    let name: String
+    let prompt: String
+    let optional: Bool
+    let provided: Bool
+    let inputType: ExtensionSetupFieldInputType
+
+    var id: String { name }
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case prompt
+        case optional
+        case provided
+        case inputType = "input_type"
+    }
+}
+
+struct ExtensionSetupResponseDTO: Decodable {
+    let name: String
+    let kind: String
+    let secrets: [ExtensionSecretFieldInfo]
+    let fields: [ExtensionSetupFieldInfo]
 }
 
 struct SkillListResponseDTO: Decodable {
@@ -247,6 +327,23 @@ struct RemoteSetting: Decodable, Identifiable {
     }
 }
 
+struct SettingsExportResponseDTO: Decodable {
+    let settings: [String: JSONValue]
+}
+
+struct GatewayLogLevel: Decodable, Equatable {
+    let level: String
+}
+
+struct GatewayLogEntry: Decodable, Identifiable, Equatable {
+    let level: String
+    let target: String
+    let message: String
+    let timestamp: String
+
+    var id: String { "\(timestamp)-\(target)-\(String(message.prefix(32)))" }
+}
+
 struct AdminUserListResponseDTO: Decodable {
     let users: [AdminConsoleUser]
 }
@@ -280,6 +377,122 @@ struct AdminConsoleUser: Decodable, Identifiable {
         case totalCost = "total_cost"
         case lastActiveAt = "last_active_at"
         case metadata
+    }
+}
+
+struct AdminUserCreateResponseDTO: Decodable, Identifiable {
+    let id: String
+    let email: String?
+    let displayName: String
+    let status: String
+    let role: String
+    let token: String
+    let createdAt: String
+    let createdBy: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case email
+        case displayName = "display_name"
+        case status
+        case role
+        case token
+        case createdAt = "created_at"
+        case createdBy = "created_by"
+    }
+}
+
+struct AdminUserProfileResponseDTO: Decodable, Identifiable {
+    let id: String
+    let email: String?
+    let displayName: String
+    let status: String
+    let role: String
+    let createdAt: String
+    let updatedAt: String
+    let metadata: JSONValue
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case email
+        case displayName = "display_name"
+        case status
+        case role
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+        case metadata
+    }
+}
+
+struct AdminUserStatusResponseDTO: Decodable, Identifiable {
+    let id: String
+    let status: String
+}
+
+struct AdminUserDeleteResponseDTO: Decodable, Identifiable {
+    let id: String
+    let deleted: Bool
+}
+
+struct AdminUserSecretsResponseDTO: Decodable {
+    let userID: String
+    let secrets: [AdminUserSecretRef]
+
+    enum CodingKeys: String, CodingKey {
+        case userID = "user_id"
+        case secrets
+    }
+}
+
+struct AdminUserSecretRef: Decodable, Identifiable {
+    let name: String
+    let provider: String?
+
+    var id: String { name }
+}
+
+struct AdminSecretMutationResponseDTO: Decodable {
+    let userID: String
+    let name: String
+    let status: String
+
+    enum CodingKeys: String, CodingKey {
+        case userID = "user_id"
+        case name
+        case status
+    }
+}
+
+struct AdminSecretDeleteResponseDTO: Decodable {
+    let userID: String
+    let name: String
+    let deleted: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case userID = "user_id"
+        case name
+        case deleted
+    }
+}
+
+struct PairingListResponseDTO: Decodable {
+    let channel: String
+    let requests: [PairingRequestInfoDTO]
+}
+
+struct PairingRequestInfoDTO: Decodable, Identifiable {
+    let code: String
+    let senderID: String
+    let meta: JSONValue?
+    let createdAt: String
+
+    var id: String { code }
+
+    enum CodingKeys: String, CodingKey {
+        case code
+        case senderID = "sender_id"
+        case meta
+        case createdAt = "created_at"
     }
 }
 
