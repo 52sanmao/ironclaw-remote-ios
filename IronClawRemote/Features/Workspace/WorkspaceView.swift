@@ -9,322 +9,230 @@ struct WorkspaceView: View {
         !viewModel.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.isSearching
     }
 
-    private var canSaveDraft: Bool {
-        guard let selectedFile = viewModel.selectedFile else { return false }
-        return !viewModel.isSaving && viewModel.draftContent != selectedFile.content
-    }
-
     var body: some View {
-        NavigationSplitView {
-            sidebarContent
-                .navigationTitle("工作区")
-                .toolbar {
-                    ToolbarItemGroup(placement: .primaryAction) {
+        List {
+            if let actionMessage = viewModel.actionMessage {
+                Section {
+                    HStack(spacing: ICSpacing.sm) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(ICColor.success)
+                        Text(actionMessage)
+                            .font(.caption)
+                            .foregroundStyle(ICColor.success)
+                        Spacer()
+                    }
+                    .padding(ICSpacing.sm)
+                    .background(ICColor.success.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: ICCornerRadius.card, style: .continuous))
+                }
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+            }
+
+            if let previewErrorMessage = viewModel.previewErrorMessage {
+                Section {
+                    HStack(spacing: ICSpacing.sm) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(ICColor.danger)
+                        Text(previewErrorMessage)
+                            .font(.caption)
+                            .foregroundStyle(ICColor.danger)
+                        Spacer()
+                    }
+                    .padding(ICSpacing.sm)
+                    .background(ICColor.danger.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: ICCornerRadius.card, style: .continuous))
+                }
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+            }
+
+            Section {
+                VStack(alignment: .leading, spacing: ICSpacing.sm) {
+                    HStack(spacing: ICSpacing.sm) {
                         Button {
-                            isPresentingCreateSheet = true
+                            Task { await viewModel.goToRoot(using: appState.gatewayConfiguration) }
                         } label: {
-                            Label("新建", systemImage: "square.and.pencil")
+                            Label("根目录", systemImage: "house")
                         }
-                        .disabled(viewModel.isLoading)
+                        .buttonStyle(.bordered)
+                        .disabled(viewModel.currentDirectoryPath.isEmpty || viewModel.isLoading)
 
                         Button {
-                            Task { await viewModel.load(using: appState.gatewayConfiguration) }
+                            Task { await viewModel.goToParent(using: appState.gatewayConfiguration) }
                         } label: {
-                            Label("刷新", systemImage: "arrow.clockwise")
+                            Label("上一级", systemImage: "arrow.up")
                         }
-                        .disabled(viewModel.isLoading)
+                        .buttonStyle(.bordered)
+                        .disabled(!viewModel.canGoUp || viewModel.isLoading)
+                    }
+
+                    VStack(alignment: .leading, spacing: ICSpacing.xxs) {
+                        Text("当前位置")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(ICColor.textSecondary)
+                        Text(viewModel.currentDirectoryPath.isEmpty ? "/" : viewModel.currentDirectoryPath)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(ICColor.textPrimary)
+                            .textSelection(.enabled)
+                    }
+
+                    HStack(spacing: ICSpacing.sm) {
+                        TextField("搜索工作区", text: Binding(
+                            get: { viewModel.searchQuery },
+                            set: { viewModel.searchQuery = $0 }
+                        ))
+                        .textFieldStyle(.roundedBorder)
+                        .submitLabel(.search)
+                        .onSubmit {
+                            if canSearch {
+                                Task { await viewModel.search(using: appState.gatewayConfiguration) }
+                            }
+                        }
+
+                        Button(viewModel.isSearching ? "搜索中…" : "搜索") {
+                            Task { await viewModel.search(using: appState.gatewayConfiguration) }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(!canSearch)
                     }
                 }
-        } detail: {
-            detailContent
-                .navigationTitle(detailTitle)
-                .task {
-                    await viewModel.load(using: appState.gatewayConfiguration)
+                .padding(.vertical, ICSpacing.sm)
+            }
+            .listRowInsets(EdgeInsets(top: ICSpacing.sm, leading: ICSpacing.md, bottom: ICSpacing.sm, trailing: ICSpacing.md))
+            .listRowBackground(Color.clear)
+
+            if !viewModel.searchResults.isEmpty || viewModel.hasSearched || viewModel.isSearching || viewModel.searchErrorMessage != nil {
+                Section("搜索结果") {
+                    searchResultsContent
                 }
-                .refreshable {
-                    await viewModel.load(using: appState.gatewayConfiguration)
+            }
+
+            Section("目录内容") {
+                if viewModel.isLoading && viewModel.entries.isEmpty {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, alignment: .center)
+                } else if viewModel.entries.isEmpty {
+                    ContentUnavailableView(
+                        "目录为空",
+                        systemImage: "folder",
+                        description: Text("这里还没有文件或子目录。")
+                    )
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, ICSpacing.md)
+                } else {
+                    ForEach(viewModel.directoryEntries) { entry in
+                        if entry.isDir {
+                            Button {
+                                Task { await viewModel.openDirectoryEntry(entry, configuration: appState.gatewayConfiguration) }
+                            } label: {
+                                WorkspaceListEntryRow(
+                                    entry: entry,
+                                    isSelected: viewModel.selectedEntryPath == entry.path
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            NavigationLink {
+                                WorkspaceFileEditorView(
+                                    path: entry.path,
+                                    configuration: appState.gatewayConfiguration
+                                )
+                            } label: {
+                                WorkspaceListEntryRow(
+                                    entry: entry,
+                                    isSelected: viewModel.selectedEntryPath == entry.path
+                                )
+                            }
+                        }
+                    }
                 }
+            }
+        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(ICColor.background)
+        .navigationTitle("工作区")
+        .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button {
+                    isPresentingCreateSheet = true
+                } label: {
+                    Label("新建", systemImage: "square.and.pencil")
+                }
+                .disabled(viewModel.isLoading)
+
+                Button {
+                    Task { await viewModel.load(using: appState.gatewayConfiguration) }
+                } label: {
+                    Label("刷新", systemImage: "arrow.clockwise")
+                }
+                .disabled(viewModel.isLoading)
+            }
         }
         .sheet(isPresented: $isPresentingCreateSheet) {
             createFileSheet
         }
-    }
-
-    private var detailTitle: String {
-        if let selectedFile = viewModel.selectedFile {
-            return selectedFile.path.split(separator: "/").last.map(String.init) ?? "预览"
+        .task {
+            await viewModel.load(using: appState.gatewayConfiguration)
         }
-        if viewModel.selectedEntryIsDirectory {
-            return viewModel.currentDirectoryPath.isEmpty ? "根目录" : "目录"
-        }
-        return "预览"
-    }
-
-    private var sidebarContent: some View {
-        Group {
-            if viewModel.isLoading && viewModel.entries.isEmpty {
-                ContentUnavailableView("正在加载工作区…", systemImage: "folder")
-            } else if let loadErrorMessage = viewModel.loadErrorMessage, viewModel.entries.isEmpty {
-                ContentUnavailableView(
-                    "无法加载工作区",
-                    systemImage: "exclamationmark.triangle",
-                    description: Text(loadErrorMessage)
-                )
-            } else {
-                List {
-                    Section {
-                        directoryHeader
-                    }
-                    .listRowInsets(EdgeInsets(top: ICSpacing.sm, leading: ICSpacing.md, bottom: ICSpacing.sm, trailing: ICSpacing.md))
-                    .listRowBackground(Color.clear)
-
-                    if !viewModel.directoryEntries.isEmpty {
-                        Section("当前目录") {
-                            ForEach(viewModel.directoryEntries) { entry in
-                                Button {
-                                    Task { await viewModel.openDirectoryEntry(entry, configuration: appState.gatewayConfiguration) }
-                                } label: {
-                                    WorkspaceListEntryRow(
-                                        entry: entry,
-                                        isSelected: viewModel.selectedEntryPath == entry.path
-                                    )
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    } else if !viewModel.isLoading {
-                        Section("当前目录") {
-                            ContentUnavailableView(
-                                "目录为空",
-                                systemImage: "folder",
-                                description: Text("这里还没有文件或子目录。")
-                            )
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, ICSpacing.md)
-                        }
-                    }
-
-                    if !viewModel.searchResults.isEmpty || viewModel.hasSearched || viewModel.isSearching || viewModel.searchErrorMessage != nil {
-                        Section("搜索") {
-                            searchSidebarContent
-                        }
-                    }
-                }
-                .listStyle(.sidebar)
-                .scrollContentBackground(.hidden)
-                .background(ICColor.background)
-            }
-        }
-    }
-
-    private var directoryHeader: some View {
-        VStack(alignment: .leading, spacing: ICSpacing.sm) {
-            HStack(spacing: ICSpacing.sm) {
-                Button {
-                    Task { await viewModel.goToRoot(using: appState.gatewayConfiguration) }
-                } label: {
-                    Label("根目录", systemImage: "house")
-                }
-                .buttonStyle(.bordered)
-                .disabled(viewModel.currentDirectoryPath.isEmpty || viewModel.isLoading)
-
-                Button {
-                    Task { await viewModel.goToParent(using: appState.gatewayConfiguration) }
-                } label: {
-                    Label("上一级", systemImage: "arrow.up")
-                }
-                .buttonStyle(.bordered)
-                .disabled(!viewModel.canGoUp || viewModel.isLoading)
-            }
-
-            VStack(alignment: .leading, spacing: ICSpacing.xxs) {
-                Text("当前位置")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(ICColor.textSecondary)
-                Text(viewModel.currentDirectoryPath.isEmpty ? "/" : viewModel.currentDirectoryPath)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(ICColor.textPrimary)
-                    .textSelection(.enabled)
-            }
-
-            HStack(spacing: ICSpacing.sm) {
-                TextField("搜索工作区", text: Binding(
-                    get: { viewModel.searchQuery },
-                    set: { viewModel.searchQuery = $0 }
-                ))
-                .textFieldStyle(.roundedBorder)
-                .submitLabel(.search)
-                .onSubmit {
-                    if canSearch {
-                        Task { await viewModel.search(using: appState.gatewayConfiguration) }
-                    }
-                }
-
-                Button(viewModel.isSearching ? "搜索中…" : "搜索") {
-                    Task { await viewModel.search(using: appState.gatewayConfiguration) }
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(!canSearch)
-            }
+        .refreshable {
+            await viewModel.load(using: appState.gatewayConfiguration)
         }
     }
 
     @ViewBuilder
-    private var searchSidebarContent: some View {
+    private var searchResultsContent: some View {
         if viewModel.isSearching {
             Label("正在搜索…", systemImage: "magnifyingglass")
                 .foregroundStyle(ICColor.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, ICSpacing.sm)
         } else if let searchErrorMessage = viewModel.searchErrorMessage {
-            Text(searchErrorMessage)
-                .font(.caption)
-                .foregroundStyle(ICColor.danger)
+            HStack(spacing: ICSpacing.sm) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(ICColor.danger)
+                Text(searchErrorMessage)
+                    .font(.caption)
+                    .foregroundStyle(ICColor.danger)
+                Spacer()
+            }
+            .padding(ICSpacing.sm)
+            .background(ICColor.danger.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: ICCornerRadius.card, style: .continuous))
         } else if !viewModel.searchResults.isEmpty {
             ForEach(viewModel.searchResults) { result in
-                Button {
-                    Task { await viewModel.selectSearchResult(result, configuration: appState.gatewayConfiguration) }
-                } label: {
-                    WorkspaceSearchResultRow(
-                        entry: result,
-                        isSelected: viewModel.selectedEntryPath == result.path
-                    )
+                if result.isDir {
+                    Button {
+                        Task { await viewModel.selectSearchResult(result, configuration: appState.gatewayConfiguration) }
+                    } label: {
+                        WorkspaceSearchResultRow(
+                            entry: result,
+                            isSelected: viewModel.selectedEntryPath == result.path
+                        )
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    NavigationLink {
+                        WorkspaceFileEditorView(
+                            path: result.path,
+                            configuration: appState.gatewayConfiguration
+                        )
+                    } label: {
+                        WorkspaceSearchResultRow(
+                            entry: result,
+                            isSelected: viewModel.selectedEntryPath == result.path
+                        )
+                    }
                 }
-                .buttonStyle(.plain)
             }
         } else if viewModel.hasSearched {
             Text("没有匹配结果")
                 .font(.caption)
                 .foregroundStyle(ICColor.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, ICSpacing.sm)
         }
-    }
-
-    private var detailContent: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: ICSpacing.md) {
-                if let actionMessage = viewModel.actionMessage {
-                    WorkspaceStatusCard(
-                        title: "操作已完成",
-                        message: actionMessage,
-                        systemImage: "checkmark.circle.fill",
-                        tint: ICColor.success
-                    )
-                }
-
-                if let previewErrorMessage = viewModel.previewErrorMessage {
-                    WorkspaceStatusCard(
-                        title: "操作失败",
-                        message: previewErrorMessage,
-                        systemImage: "exclamationmark.triangle.fill",
-                        tint: ICColor.danger
-                    )
-                }
-
-                if viewModel.selectedEntryIsDirectory {
-                    directoryDetailCard
-                } else if let selectedFile = viewModel.selectedFile {
-                    fileEditorCard(for: selectedFile)
-                } else if let infoMessage = viewModel.infoMessage {
-                    ContentUnavailableView(
-                        "选择文件",
-                        systemImage: "doc.text.magnifyingglass",
-                        description: Text(infoMessage)
-                    )
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, ICSpacing.xl)
-                } else {
-                    ContentUnavailableView("选择记忆文件", systemImage: "doc.text.magnifyingglass")
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, ICSpacing.xl)
-                }
-            }
-            .padding(ICSpacing.md)
-        }
-        .background(ICColor.background)
-    }
-
-    private var directoryDetailCard: some View {
-        VStack(alignment: .leading, spacing: ICSpacing.md) {
-            Label(viewModel.currentDirectoryPath.isEmpty ? "根目录" : viewModel.currentDirectoryPath, systemImage: "folder.fill")
-                .font(.headline)
-                .foregroundStyle(ICColor.textPrimary)
-
-            if let infoMessage = viewModel.infoMessage {
-                Text(infoMessage)
-                    .font(.subheadline)
-                    .foregroundStyle(ICColor.textSecondary)
-            }
-
-            if viewModel.directoryEntries.isEmpty {
-                ContentUnavailableView(
-                    "目录为空",
-                    systemImage: "folder",
-                    description: Text("可以在这里新建文件，或返回上一级继续浏览。")
-                )
-            } else {
-                VStack(alignment: .leading, spacing: ICSpacing.sm) {
-                    Text("包含内容")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(ICColor.textPrimary)
-                    ForEach(viewModel.directoryEntries) { entry in
-                        Button {
-                            Task { await viewModel.openDirectoryEntry(entry, configuration: appState.gatewayConfiguration) }
-                        } label: {
-                            WorkspaceSearchResultRow(
-                                entry: entry,
-                                isSelected: viewModel.selectedEntryPath == entry.path
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-        }
-        .padding(ICSpacing.md)
-        .background(ICColor.surface)
-        .clipShape(RoundedRectangle(cornerRadius: ICCornerRadius.card, style: .continuous))
-    }
-
-    private func fileEditorCard(for selectedFile: MemoryReadResponse) -> some View {
-        VStack(alignment: .leading, spacing: ICSpacing.md) {
-            VStack(alignment: .leading, spacing: ICSpacing.xxs) {
-                Text(selectedFile.path)
-                    .font(.headline)
-                    .foregroundStyle(ICColor.textPrimary)
-                    .textSelection(.enabled)
-                if let updatedAt = selectedFile.updatedAt, !updatedAt.isEmpty {
-                    Label(updatedAt, systemImage: "clock")
-                        .font(.caption)
-                        .foregroundStyle(ICColor.textSecondary)
-                }
-            }
-
-            TextEditor(text: Binding(
-                get: { viewModel.draftContent },
-                set: { viewModel.updateDraft($0) }
-            ))
-            .font(.system(.body, design: .monospaced))
-            .foregroundStyle(ICColor.textPrimary)
-            .frame(minHeight: 320)
-            .padding(ICSpacing.sm)
-            .background(ICColor.background)
-            .clipShape(RoundedRectangle(cornerRadius: ICCornerRadius.card, style: .continuous))
-
-            HStack(spacing: ICSpacing.sm) {
-                Button("还原") {
-                    viewModel.revertDraft()
-                }
-                .buttonStyle(.bordered)
-                .disabled(viewModel.isSaving || viewModel.draftContent == selectedFile.content)
-
-                Button(viewModel.isSaving ? "保存中…" : "保存") {
-                    Task { await viewModel.saveSelectedFile(using: appState.gatewayConfiguration) }
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(!canSaveDraft)
-            }
-        }
-        .padding(ICSpacing.md)
-        .background(ICColor.surface)
-        .clipShape(RoundedRectangle(cornerRadius: ICCornerRadius.card, style: .continuous))
     }
 
     private var createFileSheet: some View {
@@ -374,6 +282,153 @@ struct WorkspaceView: View {
                     .disabled(viewModel.newFileName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || viewModel.isCreatingFile)
                 }
             }
+        }
+    }
+}
+
+struct WorkspaceFileEditorView: View {
+    let path: String
+    let configuration: GatewayConfiguration
+
+    @State private var draftContent: String = ""
+    @State private var isSaving = false
+    @State private var errorMessage: String?
+    @State private var actionMessage: String?
+    @State private var fileInfo: MemoryReadResponse?
+    @State private var isLoading = false
+
+    private var canSave: Bool {
+        !isSaving && draftContent != (fileInfo?.content ?? "")
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: ICSpacing.md) {
+                if let actionMessage {
+                    HStack(spacing: ICSpacing.sm) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(ICColor.success)
+                        Text(actionMessage)
+                            .font(.caption)
+                            .foregroundStyle(ICColor.success)
+                        Spacer()
+                    }
+                    .padding(ICSpacing.md)
+                    .background(ICColor.success.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: ICCornerRadius.card, style: .continuous))
+                }
+
+                if let errorMessage {
+                    HStack(spacing: ICSpacing.sm) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(ICColor.danger)
+                        Text(errorMessage)
+                            .font(.caption)
+                            .foregroundStyle(ICColor.danger)
+                        Spacer()
+                    }
+                    .padding(ICSpacing.md)
+                    .background(ICColor.danger.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: ICCornerRadius.card, style: .continuous))
+                }
+
+                VStack(alignment: .leading, spacing: ICSpacing.md) {
+                    VStack(alignment: .leading, spacing: ICSpacing.xxs) {
+                        Text(fileInfo?.path ?? path)
+                            .font(.headline)
+                            .foregroundStyle(ICColor.textPrimary)
+                            .textSelection(.enabled)
+                        if let updatedAt = fileInfo?.updatedAt, !updatedAt.isEmpty {
+                            Label(updatedAt, systemImage: "clock")
+                                .font(.caption)
+                                .foregroundStyle(ICColor.textSecondary)
+                        }
+                    }
+
+                    TextEditor(text: $draftContent)
+                        .font(.system(.body, design: .monospaced))
+                        .foregroundStyle(ICColor.textPrimary)
+                        .frame(minHeight: 400)
+                        .padding(ICSpacing.sm)
+                        .background(ICColor.background)
+                        .clipShape(RoundedRectangle(cornerRadius: ICCornerRadius.card, style: .continuous))
+
+                    HStack(spacing: ICSpacing.sm) {
+                        Button("还原") {
+                            draftContent = fileInfo?.content ?? content
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(isSaving || draftContent == (fileInfo?.content ?? content))
+
+                        Button(isSaving ? "保存中…" : "保存") {
+                            Task { await save() }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(!canSave)
+                    }
+                }
+                .padding(ICSpacing.md)
+                .background(ICColor.surface)
+                .clipShape(RoundedRectangle(cornerRadius: ICCornerRadius.card, style: .continuous))
+            }
+            .padding(ICSpacing.md)
+        }
+        .background(ICColor.background)
+        .navigationTitle(path.split(separator: "/").last.map(String.init) ?? "文件")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    Task { await reload() }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .disabled(isLoading || isSaving)
+            }
+        }
+        .task {
+            await reload()
+        }
+    }
+
+    private func reload() async {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        if configuration.isDemoMode {
+            fileInfo = MemoryReadResponse(path: path, content: draftContent.isEmpty ? "演示内容" : draftContent, updatedAt: nil)
+            if draftContent.isEmpty {
+                draftContent = fileInfo?.content ?? ""
+            }
+            return
+        }
+
+        do {
+            let client = GatewayClient(configuration: configuration)
+            fileInfo = try await client.readMemory(path: path)
+            draftContent = fileInfo?.content ?? ""
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func save() async {
+        isSaving = true
+        errorMessage = nil
+        defer { isSaving = false }
+
+        if configuration.isDemoMode {
+            actionMessage = "演示模式：未实际保存"
+            return
+        }
+
+        do {
+            let client = GatewayClient(configuration: configuration)
+            _ = try await client.writeMemory(path: path, content: draftContent)
+            actionMessage = "已保存"
+            await reload()
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 }
@@ -441,35 +496,6 @@ private struct WorkspaceSearchResultRow: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(ICSpacing.sm)
-        .background(ICColor.surface)
-        .clipShape(RoundedRectangle(cornerRadius: ICCornerRadius.card, style: .continuous))
-    }
-}
-
-private struct WorkspaceStatusCard: View {
-    let title: String
-    let message: String
-    let systemImage: String
-    let tint: Color
-
-    var body: some View {
-        HStack(alignment: .top, spacing: ICSpacing.sm) {
-            Image(systemName: systemImage)
-                .foregroundStyle(tint)
-                .frame(width: 18)
-
-            VStack(alignment: .leading, spacing: ICSpacing.xxs) {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(ICColor.textPrimary)
-                Text(message)
-                    .font(.caption)
-                    .foregroundStyle(ICColor.textSecondary)
-            }
-
-            Spacer(minLength: 0)
-        }
-        .padding(ICSpacing.md)
         .background(ICColor.surface)
         .clipShape(RoundedRectangle(cornerRadius: ICCornerRadius.card, style: .continuous))
     }

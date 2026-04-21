@@ -5,54 +5,52 @@ struct ActivityHomeView: View {
     @State private var viewModel = ActivityViewModel()
 
     var body: some View {
-        NavigationStack {
-            Group {
-                if viewModel.isLoading && !hasPrimaryContent {
-                    ContentUnavailableView("正在加载运行中心…", systemImage: "bolt.horizontal.circle")
-                } else if let errorMessage = viewModel.errorMessage, !hasPrimaryContent {
-                    ContentUnavailableView(
-                        "无法加载运行中心",
-                        systemImage: "exclamationmark.triangle",
-                        description: Text(errorMessage)
-                    )
-                } else {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: ICSpacing.md) {
-                            summarySection
-                            if let errorMessage = viewModel.errorMessage {
-                                statusNotice(
-                                    title: "刷新失败",
-                                    message: errorMessage,
-                                    color: ICColor.danger,
-                                    icon: "exclamationmark.triangle.fill"
-                                )
-                            }
-                            jobsSection
-                            routinesSection
-                            missionsSection
+        Group {
+            if viewModel.isLoading && !hasPrimaryContent {
+                ContentUnavailableView("正在加载运行中心…", systemImage: "bolt.horizontal.circle")
+            } else if let errorMessage = viewModel.errorMessage, !hasPrimaryContent {
+                ContentUnavailableView(
+                    "无法加载运行中心",
+                    systemImage: "exclamationmark.triangle",
+                    description: Text(errorMessage)
+                )
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: ICSpacing.md) {
+                        summarySection
+                        if let errorMessage = viewModel.errorMessage {
+                            statusNotice(
+                                title: "刷新失败",
+                                message: errorMessage,
+                                color: ICColor.danger,
+                                icon: "exclamationmark.triangle.fill"
+                            )
                         }
-                        .padding(ICSpacing.md)
+                        jobsSection
+                        routinesSection
+                        missionsSection
                     }
+                    .padding(ICSpacing.md)
                 }
             }
-            .navigationTitle("运行中心")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        Task { await viewModel.load(using: appState.gatewayConfiguration) }
-                    } label: {
-                        if viewModel.isLoading {
-                            ProgressView()
-                        } else {
-                            Image(systemName: "arrow.clockwise")
-                        }
+        }
+        .navigationTitle("运行中心")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    Task { await viewModel.load(using: appState.gatewayConfiguration) }
+                } label: {
+                    if viewModel.isLoading {
+                        ProgressView()
+                    } else {
+                        Image(systemName: "arrow.clockwise")
                     }
-                    .disabled(viewModel.isLoading)
                 }
+                .disabled(viewModel.isLoading)
             }
-            .task {
-                await viewModel.load(using: appState.gatewayConfiguration)
-            }
+        }
+        .task {
+            await viewModel.load(using: appState.gatewayConfiguration)
         }
     }
 
