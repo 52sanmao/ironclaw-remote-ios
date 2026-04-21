@@ -383,8 +383,8 @@ struct GatewayClient {
             throw GatewayError.invalidURL
         }
 
-        let sse = SSEClient(session: session)
         return AsyncThrowingStream { continuation in
+            let sse = SSEClient(session: self.session)
             let task = Task {
                 do {
                     for try await envelope in sse.stream(url: url) {
