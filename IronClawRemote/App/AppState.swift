@@ -6,11 +6,9 @@ import SwiftUI
 final class AppState {
     var gatewayConfiguration = GatewayConfiguration.sample
     var session = SessionState()
-    var selectedTab: AppTab = .chat
+    var selectedTab: AppTab = .dashboard
     var preferredTheme: ThemePreference = .system
-    var chat = ChatStore()
-    var workspace = WorkspaceStore()
-    var activity = ActivityStore()
+    var pendingConsoleRoute: ConsoleRoute?
 
     var preferredColorScheme: ColorScheme? {
         switch preferredTheme {
@@ -47,34 +45,75 @@ final class AppState {
             session.lastErrorMessage = error.localizedDescription
         }
     }
+
+    func openConsole(_ route: ConsoleRoute) {
+        pendingConsoleRoute = route
+        selectedTab = .console
+    }
 }
 
 enum AppTab: String, CaseIterable, Identifiable {
+    case dashboard
     case chat
-    case workspace
-    case activity
-    case discover
-    case settings
+    case console
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .chat: "聊天"
-        case .workspace: "工作区"
-        case .activity: "活动"
-        case .discover: "发现"
-        case .settings: "设置"
+        case .dashboard: "工作台"
+        case .chat: "对话"
+        case .console: "控制台"
         }
     }
 
     var systemImage: String {
         switch self {
+        case .dashboard: "rectangle.3.group.bubble.left"
         case .chat: "message.badge.waveform"
+        case .console: "slider.horizontal.3"
+        }
+    }
+}
+
+enum ConsoleRoute: String, Hashable, Identifiable {
+    case workspace
+    case activity
+    case extensions
+    case skills
+    case tokens
+    case gatewayStatus
+    case settings
+    case adminUsers
+    case adminUsage
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .workspace: "工作区"
+        case .activity: "运行中心"
+        case .extensions: "扩展"
+        case .skills: "技能"
+        case .tokens: "令牌"
+        case .gatewayStatus: "网关状态"
+        case .settings: "设置"
+        case .adminUsers: "用户管理"
+        case .adminUsage: "用量总览"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
         case .workspace: "folder"
         case .activity: "waveform.path.ecg"
-        case .discover: "square.grid.2x2"
+        case .extensions: "puzzlepiece.extension"
+        case .skills: "wand.and.stars"
+        case .tokens: "key.fill"
+        case .gatewayStatus: "antenna.radiowaves.left.and.right"
         case .settings: "gearshape"
+        case .adminUsers: "person.3.fill"
+        case .adminUsage: "chart.bar.doc.horizontal"
         }
     }
 }

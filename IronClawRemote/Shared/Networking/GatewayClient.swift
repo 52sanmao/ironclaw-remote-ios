@@ -1,5 +1,43 @@
 import Foundation
 
+struct SkillSearchRequestDTO: Encodable {
+    let query: String
+}
+
+struct SkillInstallRequestDTO: Encodable {
+    let name: String
+    let slug: String?
+    let url: String?
+    let content: String?
+}
+
+struct CreateTokenRequestDTO: Encodable {
+    let name: String
+    let expiresInDays: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case expiresInDays = "expires_in_days"
+    }
+}
+
+struct MemoryWriteRequestDTO: Encodable {
+    let path: String
+    let content: String
+    let layer: String?
+    let append: Bool
+    let force: Bool
+}
+
+struct JobPromptRequestDTO: Encodable {
+    let content: String
+    let done: Bool
+}
+
+struct RoutineToggleRequestDTO: Encodable {
+    let enabled: Bool
+}
+
 enum GatewayError: LocalizedError {
     case invalidResponse
     case invalidURL
@@ -55,10 +93,21 @@ struct GatewayClient {
         try await request(path: "/api/memory/tree")
     }
 
+    func memoryList(path: String = "") async throws -> MemoryListResponse {
+        try await request(path: "/api/memory/list", queryItems: path.isEmpty ? [] : [
+            URLQueryItem(name: "path", value: path)
+        ])
+    }
+
     func readMemory(path: String) async throws -> MemoryReadResponse {
         try await request(path: "/api/memory/read", queryItems: [
             URLQueryItem(name: "path", value: path)
         ])
+    }
+
+    func writeMemory(path: String, content: String, layer: String? = nil, append: Bool = false, force: Bool = false) async throws {
+        let payload = MemoryWriteRequestDTO(path: path, content: content, layer: layer, append: append, force: force)
+        let _: EmptyResponse = try await request(path: "/api/memory/write", method: "POST", body: payload)
     }
 
     func searchMemory(query: String) async throws -> [MemoryListEntry] {
@@ -72,9 +121,69 @@ struct GatewayClient {
         return response.jobs
     }
 
+    func jobsSummary() async throws -> JobSummaryMetrics {
+        try await request(path: "/api/jobs/summary")
+    }
+
+    func jobDetail(id: String) async throws -> JobDetailResponse {
+        try await request(path: "/api/jobs/\(id)")
+    }
+
+    func cancelJob(id: String) async throws -> GatewayOperationStatus {
+        try await request(path: "/api/jobs/\(id)/cancel", method: "POST", body: EmptyPayload())
+    }
+
+    func restartJob(id: String) async throws -> GatewayOperationStatus {
+        try await request(path: "/api/jobs/\(id)/restart", method: "POST", body: EmptyPayload())
+    }
+
+    func promptJob(id: String, content: String, done: Bool = false) async throws -> GatewayOperationStatus {
+        try await request(path: "/api/jobs/\(id)/prompt", method: "POST", body: JobPromptRequestDTO(content: content, done: done))
+    }
+
+    func jobEvents(id: String) async throws -> JobEventListResponse {
+        try await request(path: "/api/jobs/\(id)/events")
+    }
+
+    func jobFiles(id: String, path: String = "") async throws -> ProjectFilesResponse {
+        try await request(path: "/api/jobs/\(id)/files/list", queryItems: path.isEmpty ? [] : [
+            URLQueryItem(name: "path", value: path)
+        ])
+    }
+
+    func readJobFile(id: String, path: String) async throws -> ProjectFileReadResponse {
+        try await request(path: "/api/jobs/\(id)/files/read", queryItems: [
+            URLQueryItem(name: "path", value: path)
+        ])
+    }
+
     func routines() async throws -> [RoutineSummary] {
         let response: RoutineListResponse = try await request(path: "/api/routines")
         return response.routines
+    }
+
+    func routinesSummary() async throws -> RoutineSummaryMetrics {
+        try await request(path: "/api/routines/summary")
+    }
+
+    func routineDetail(id: String) async throws -> RoutineDetailResponse {
+        try await request(path: "/api/routines/\(id)")
+    }
+
+    func triggerRoutine(id: String) async throws -> GatewayOperationStatus {
+        try await request(path: "/api/routines/\(id)/trigger", method: "POST", body: EmptyPayload())
+    }
+
+    func toggleRoutine(id: String, enabled: Bool) async throws -> GatewayOperationStatus {
+        try await request(path: "/api/routines/\(id)/toggle", method: "POST", body: RoutineToggleRequestDTO(enabled: enabled))
+    }
+
+    func deleteRoutine(id: String) async throws -> GatewayOperationStatus {
+        try await request(path: "/api/routines/\(id)", method: "DELETE", body: Optional<EmptyPayload>.none)
+    }
+
+    func routineRuns(id: String) async throws -> RoutineRunsResponse {
+        try await request(path: "/api/routines/\(id)/runs")
     }
 
     func missions() async throws -> [MissionSummary] {
@@ -82,11 +191,112 @@ struct GatewayClient {
         return response.missions
     }
 
+    func missionsSummary() async throws -> MissionSummaryMetrics {
+        try await request(path: "/api/engine/missions/summary")
+    }
+
+    func missionDetail(id: String) async throws -> MissionDetailResponse {
+        let response: MissionDetailEnvelope = try await request(path: "/api/engine/missions/\(id)")
+        return response.mission
+    }
+
+    func fireMission(id: String) async throws -> MissionFireResponse {
+        try await request(path: "/api/engine/missions/\(id)/fire", method: "POST", body: EmptyPayload())
+    }
+
+    func pauseMission(id: String) async throws -> EngineActionResponse {
+        try await request(path: "/api/engine/missions/\(id)/pause", method: "POST", body: EmptyPayload())
+    }
+
+    func resumeMission(id: String) async throws -> EngineActionResponse {
+        try await request(path: "/api/engine/missions/\(id)/resume", method: "POST", body: EmptyPayload())
+    }
+
+    func extensions() async throws -> [ConsoleExtension] {
+        let response: ExtensionListResponseDTO = try await request(path: "/api/extensions")
+        return response.extensions
+    }
+
+    func extensionTools() async throws -> [ConsoleToolInfo] {
+        let response: ToolListResponseDTO = try await request(path: "/api/extensions/tools")
+        return response.tools
+    }
+
+    func activateExtension(name: String) async throws -> GatewayActionResponse {
+        try await request(path: "/api/extensions/\(name)/activate", method: "POST", body: EmptyPayload())
+    }
+
+    func removeExtension(name: String) async throws -> GatewayActionResponse {
+        try await request(path: "/api/extensions/\(name)/remove", method: "POST", body: EmptyPayload())
+    }
+
+    func skills() async throws -> SkillListResponseDTO {
+        try await request(path: "/api/skills")
+    }
+
+    func searchSkills(query: String) async throws -> SkillSearchResponseDTO {
+        try await request(path: "/api/skills/search", method: "POST", body: SkillSearchRequestDTO(query: query))
+    }
+
+    func installSkill(name: String, slug: String? = nil) async throws -> GatewayActionResponse {
+        try await request(
+            path: "/api/skills/install",
+            method: "POST",
+            headers: ["X-Confirm-Action": "true"],
+            body: SkillInstallRequestDTO(name: name, slug: slug, url: nil, content: nil)
+        )
+    }
+
+    func removeSkill(name: String) async throws -> GatewayActionResponse {
+        try await request(path: "/api/skills/\(name)", method: "DELETE", headers: ["X-Confirm-Action": "true"], body: Optional<EmptyPayload>.none)
+    }
+
+    func tokens() async throws -> [APITokenRecord] {
+        let response: APITokenListResponseDTO = try await request(path: "/api/tokens")
+        return response.tokens
+    }
+
+    func createToken(name: String, expiresInDays: Int? = nil) async throws -> APITokenCreateResult {
+        try await request(path: "/api/tokens", method: "POST", body: CreateTokenRequestDTO(name: name, expiresInDays: expiresInDays))
+    }
+
+    func revokeToken(id: String) async throws -> TokenRevokeResult {
+        try await request(path: "/api/tokens/\(id)", method: "DELETE", body: Optional<EmptyPayload>.none)
+    }
+
+    func gatewayStatus() async throws -> GatewayStatusInfo {
+        try await request(path: "/api/gateway/status")
+    }
+
+    func settings() async throws -> [RemoteSetting] {
+        let response: SettingsListResponseDTO = try await request(path: "/api/settings")
+        return response.settings
+    }
+
+    func adminUsers() async throws -> [AdminConsoleUser] {
+        let response: AdminUserListResponseDTO = try await request(path: "/api/admin/users")
+        return response.users
+    }
+
+    func adminUsageSummary() async throws -> AdminUsageSummary {
+        try await request(path: "/api/admin/usage/summary")
+    }
+
+    func adminUsage(period: String = "day") async throws -> AdminUsageStats {
+        try await request(path: "/api/admin/usage", queryItems: [
+            URLQueryItem(name: "period", value: period)
+        ])
+    }
+
     private func request<Response: Decodable>(path: String, queryItems: [URLQueryItem] = []) async throws -> Response {
-        try await request(path: path, queryItems: queryItems, method: "GET", body: Optional<EmptyPayload>.none)
+        try await request(path: path, queryItems: queryItems, method: "GET", headers: [:], body: Optional<EmptyPayload>.none)
     }
 
     private func request<Response: Decodable, Body: Encodable>(path: String, queryItems: [URLQueryItem] = [], method: String, body: Body?) async throws -> Response {
+        try await request(path: path, queryItems: queryItems, method: method, headers: [:], body: body)
+    }
+
+    private func request<Response: Decodable, Body: Encodable>(path: String, queryItems: [URLQueryItem] = [], method: String, headers: [String: String], body: Body?) async throws -> Response {
         guard !configuration.effectiveToken.isEmpty else {
             throw GatewayError.missingToken
         }
@@ -95,6 +305,9 @@ struct GatewayClient {
         request.httpMethod = method
         request.setValue("Bearer \(configuration.effectiveToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        for (field, value) in headers {
+            request.setValue(value, forHTTPHeaderField: field)
+        }
         if body != nil {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }
@@ -148,6 +361,10 @@ struct GatewayClient {
 
 private struct EmptyPayload: Encodable {}
 private struct EmptyResponse: Decodable {}
+
+private struct MissionDetailEnvelope: Decodable {
+    let mission: MissionDetailResponse
+}
 
 extension JSONDecoder {
     static var ironClaw: JSONDecoder {
