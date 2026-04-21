@@ -355,10 +355,10 @@ struct WorkspaceFileEditorView: View {
 
                     HStack(spacing: ICSpacing.sm) {
                         Button("还原") {
-                            draftContent = fileInfo?.content ?? content
+                            draftContent = fileInfo?.content ?? ""
                         }
                         .buttonStyle(.bordered)
-                        .disabled(isSaving || draftContent == (fileInfo?.content ?? content))
+                        .disabled(isSaving || draftContent == (fileInfo?.content ?? ""))
 
                         Button(isSaving ? "保存中…" : "保存") {
                             Task { await save() }
